@@ -44,14 +44,12 @@ body{
     line-height:50px;
 }
 
-#item{
+.item{
     width:40px;
     height:40px;
-    background:rgb(255, 0, 221);
     position:absolute;
-    left:600px;
-    top:600px;
     border-radius:50%;
+    background-color: purple;
 }
 </style>
 </head>
@@ -61,43 +59,43 @@ body{
 <div id="board">
     <div id="screen">
         <div id="player">Me</div>
-        <div id="item"></div>
+        <div id="item" class="item"></div>
+        <div id="item2" class="item"></div>
+        <div id="item3" class="item"></div>
     </div>
 </div>
 
 <script>
 let player = document.getElementById("player")
 let screen = document.getElementById("screen")
-let item = document.getElementById("item")
 
 let x = 100
 let y = 100
 let keys = {}
 
-// ✅ item as object
-let itemData = {
-    x: 600,
-    y: 600,
-    picked: false
-}
+// ✅ ALL ITEMS IN ARRAY
+let items = [
+    { item: document.getElementById("item"),  x:600, y:600, picked:false },
+    { item: document.getElementById("item2"), x:800, y:500, picked:false },
+    { item: document.getElementById("item3"), x:400, y:700, picked:false }
+]
 
-document.addEventListener("keydown", e => keys[e.key] = true)
-document.addEventListener("keyup", e => keys[e.key] = false)
+document.addEventListener("keydown", event => keys[event.key] = true)
+document.addEventListener("keyup", event => keys[event.key] = false)
 
-function colliding(){
+function colliding(item){
     let playerSize = 50
     let itemSize = 40
 
     return (
-        x < itemData.x + itemSize &&
-        x + playerSize > itemData.x &&
-        y < itemData.y + itemSize &&
-        y + playerSize > itemData.y
+        x < item.x + itemSize &&
+        x + playerSize > item.x &&
+        y < item.y + itemSize &&
+        y + playerSize > item.y
     )
 }
 
 function move(){
-
     let speed = keys["Shift"] ? 40 : 10
 
     if(keys["ArrowUp"]) y -= speed
@@ -113,21 +111,26 @@ function move(){
     player.style.left = x + "px"
     player.style.top = y + "px"
 
-    screen.style.left = (250 - x) + "px"
-    screen.style.top = (250 - y) + "px"
+    screen.style.left= (250-x)+ "px"
+    screen.style.top= (250-y)+ "px"
 
-    if(!itemData.picked){
-        item.style.left = itemData.x + "px"
-        item.style.top = itemData.y + "px"
-    }
+    items.forEach((item, index) => {
 
-    if(!itemData.picked && colliding() && keys[" "]){
-        itemData.picked = true
+        if(!item.picked){
+            item.item.style.left = item.x + "px"
+            item.item.style.top = item.y + "px"
+        }
 
-        item.style.position = "fixed"
-        item.style.top = "10px"
-        item.style.right = "10px"
-    }
+        if(!item.picked && colliding(item) && keys[" "]){
+            item.picked = true
+
+            // stack in top-right
+            item.item.style.position = "fixed"
+            item.item.style.top = "10px"
+            item.item.style.right = (10 + index * 50) + "px"
+        }
+
+    })
 
     requestAnimationFrame(move)
 }
