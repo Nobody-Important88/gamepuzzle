@@ -1,134 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game</title>
 
-    <style>
-    *{
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+<style>
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-    body{
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-    }
+body{
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
 
-    #board{
-        width:500px;
-        height:500px;
-        overflow:hidden;
-        border:4px solid;
-        position:relative;
-    }
+#board{
+    width:500px;
+    height:500px;
+    overflow:hidden;
+    border:4px solid;
+    position:relative;
+}
 
-    #screen{
-        width:2000px;
-        height:2000px;
-        position:absolute;
-        background-image: url(IMG_20251001_093540_599.jpg);
-        background-repeat: repeat;
-    }
+#screen{
+    width:2000px;
+    height:2000px;
+    position:absolute;
+    background-image: url(IMG_20251001_093540_599.jpg);
+    background-repeat: repeat;
+}
 
-    #player{
-        width:50px;
-        height:50px;
-        background:green;
-        position:absolute;
-        color:white;
-        text-align:center;
-        line-height:50px;
-    }
+#player{
+    width:50px;
+    height:50px;
+    background:green;
+    position:absolute;
+    color:white;
+    text-align:center;
+    line-height:50px;
+}
 
-    #item{
-        width:40px;
-        height:40px;
-        background:gold;
-        position:absolute;
-        left:600px;
-        top:600px;
-        border-radius:50%;
-    }
-
-    body{
-        width: 500px;
-        height: 500px;
-        border: 4px solid;
-    }
-    </style>
+#item{
+    width:40px;
+    height:40px;
+    background:rgb(255, 0, 221);
+    position:absolute;
+    left:600px;
+    top:600px;
+    border-radius:50%;
+}
+</style>
 </head>
 
 <body>
 
-    <div id="board">
-        <div id="screen">
-            <div id="player">Me</div>
-            <div id="item"></div>
-        </div>
+<div id="board">
+    <div id="screen">
+        <div id="player">Me</div>
+        <div id="item"></div>
     </div>
+</div>
 
-    <script>
-        let player = document.getElementById("player")
-        let screen = document.getElementById("screen")
-        let item = document.getElementById("item")
+<script>
+let player = document.getElementById("player")
+let screen = document.getElementById("screen")
+let item = document.getElementById("item")
 
-        let x = 100
-        let y = 100
-        let keys = {}
+let x = 100
+let y = 100
+let keys = {}
 
-        let itemX = 600
-        let itemY = 600
-        let picked = false
+// ✅ item as object
+let itemData = {
+    x: 600,
+    y: 600,
+    picked: false
+}
 
-        document.addEventListener("keydown", event => keys[event.key] = true)
-        document.addEventListener("keyup", event => keys[event.key] = false)
+document.addEventListener("keydown", e => keys[e.key] = true)
+document.addEventListener("keyup", e => keys[e.key] = false)
 
-        function isColliding(){
+function colliding(){
+    let playerSize = 50
+    let itemSize = 40
 
-            let playerSize = 50
-            let itemSize = 40
+    return (
+        x < itemData.x + itemSize &&
+        x + playerSize > itemData.x &&
+        y < itemData.y + itemSize &&
+        y + playerSize > itemData.y
+    )
+}
 
-            return (
-                x < itemX + itemSize &&
-                x + playerSize > itemX &&
-                y < itemY + itemSize &&
-                y + playerSize > itemY
-            )
-        }
+function move(){
 
-        function move(){
+    let speed = keys["Shift"] ? 40 : 10
 
-            let speed = keys["Shift"] ? 40 : 10
+    if(keys["ArrowUp"]) y -= speed
+    if(keys["ArrowDown"]) y += speed
+    if(keys["ArrowLeft"]) x -= speed
+    if(keys["ArrowRight"]) x += speed
 
-            if(keys["ArrowUp"]) y -= speed
-            if(keys["ArrowDown"]) y += speed
-            if(keys["ArrowLeft"]) x -= speed
-            if(keys["ArrowRight"]) x += speed
+    if(x < 0) x = 0
+    if(y < 0) y = 0
+    if(x > 1950) x = 1950
+    if(y > 1950) y = 1950
 
-            if(x < 0) x = 0
-            if(y < 0) y = 0
-            if(x > 1950) x = 1950
-            if(y > 1950) y = 1950
+    player.style.left = x + "px"
+    player.style.top = y + "px"
 
-            player.style.left = x + "px"
-            player.style.top = y + "px"
+    screen.style.left = (250 - x) + "px"
+    screen.style.top = (250 - y) + "px"
 
-            screen.style.left = (250 - x) + "px"
-            screen.style.top = (250 - y) + "px"
+    if(!itemData.picked){
+        item.style.left = itemData.x + "px"
+        item.style.top = itemData.y + "px"
+    }
 
-            if(!picked && isColliding() && keys[" "]){
-                picked = true
-                item.style.display = "none"
-            }
+    if(!itemData.picked && colliding() && keys[" "]){
+        itemData.picked = true
 
-            requestAnimationFrame(move)
-        }
-        move()
-    </script>
+        item.style.position = "fixed"
+        item.style.top = "10px"
+        item.style.right = "10px"
+    }
+
+    requestAnimationFrame(move)
+}
+
+move()
+</script>
 
 </body>
 </html>
