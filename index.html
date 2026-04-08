@@ -68,12 +68,9 @@ body{
 <script>
 let player = document.getElementById("player")
 let screen = document.getElementById("screen")
-
 let x = 100
 let y = 100
 let keys = {}
-
-// ✅ ALL ITEMS IN ARRAY
 let items = [
     { item: document.getElementById("item"),  x:600, y:600, picked:false },
     { item: document.getElementById("item2"), x:800, y:500, picked:false },
@@ -115,7 +112,6 @@ function move(){
     screen.style.top= (250-y)+ "px"
 
     items.forEach((item, index) => {
-
         if(!item.picked){
             item.item.style.left = item.x + "px"
             item.item.style.top = item.y + "px"
@@ -123,20 +119,14 @@ function move(){
 
         if(!item.picked && colliding(item) && keys[" "]){
             item.picked = true
-
-            // stack in top-right
             item.item.style.position = "fixed"
             item.item.style.top = "10px"
             item.item.style.right = (10 + index * 50) + "px"
         }
-
     })
-
     requestAnimationFrame(move)
 }
-
 move()
 </script>
-
 </body>
 </html>
