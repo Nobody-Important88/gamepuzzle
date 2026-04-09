@@ -172,18 +172,16 @@ function move(){
 
     items.forEach((item, index) => {
         if(!item.picked){
-            item.item.style.right = item.x +"px"
+            item.item.style.left = item.x +"px"
             item.item.style.top = item.y + "px"
         }
 // !item.picked && colliding(item) && 
-        if(!item.picked && colliding(item) && keys[" "]){
+        if(!item.picked && colliding(item) && (keys[" "] || keys["Space"])){
             item.picked = true
             inventory[item.type] = true
             item.item.style.position = "fixed"
-            item.item.style.top = "50px"
-            item.item.style.right = (90 + index * 60) + "px"
-            // item.item.y = 1400 +"px"
-            // item.item.x = 1400 +"px"
+            item.item.style.top = "20px"
+            item.item.style.left = (20 + index * 60) + "px"
         }
 
         doors.forEach((dor, index) => {
@@ -194,18 +192,18 @@ function move(){
                 dor.unlocked = true
                 dor.dor.style.backgroundColor ="red"
                 dor.dor.textContent="Opened"
+
+                items.forEach(item => {
+                    if(item.type === dor.type){
+                    item.item.style.display ="none"
+            }
+        })
+        inventory[dor.type]=false
             }
         })
     })
     requestAnimationFrame(move)
-}/*if(!item.picked && colliding(item) && (keys[" "] || keys["Space"])){
-    item.picked = true
-    inventory[item.type] = true
-
-    item.item.style.position = "fixed"
-    item.item.style.top = "20px"
-    item.item.style.left = (20 + index * 60) + "px"
-}*/
+}
     move()
 </script>
 </body>
