@@ -49,7 +49,30 @@ body{
     height:40px;
     position:absolute;
     border-radius:50%;
-    background-color: purple;
+    border: solid green 4px;
+}
+#item{
+    background-color: rgb(38, 0, 128);
+}
+#item2{
+    background-color: rgb(128, 0, 0);
+}
+#item3{
+    background-image: url(IMG_20251001_093540_599.jpg);
+}
+#blueDoor{
+    width: 100px;
+    height: 100px;
+    background-color: aqua;
+    border: solid blue 4px;
+    position:absolute;
+}
+#greenDoor{
+    width: 100px;
+    height: 100px;
+    background-color: rgb(0, 255, 51);
+    border: solid rgb(2, 139, 0) 4px;
+    position:absolute;
 }
 </style>
 </head>
@@ -62,6 +85,9 @@ body{
         <div id="item" class="item"></div>
         <div id="item2" class="item"></div>
         <div id="item3" class="item"></div>
+
+        <div id="blueDoor">Closed</div>
+        <div id="greenDoor">Closed</div>
     </div>
 </div>
 
@@ -71,9 +97,14 @@ let screen = document.getElementById("screen")
 let x = 100
 let y = 100
 let keys = {}
+
+let doors =[
+    { dor: document.getElementById("blueDoor"), x:1000, y:1000},
+    { dor: document.getElementById("greenDoor"), x:500, y:500},
+]
 let items = [
-    { item: document.getElementById("item"),  x:600, y:600, picked:false },
-    { item: document.getElementById("item2"), x:800, y:500, picked:false },
+    { item: document.getElementById("item"), x:600, y:600, picked:false },
+    { item: document.getElementById("item2"), x:800, y:500, picked:false, key:false },
     { item: document.getElementById("item3"), x:400, y:700, picked:false }
 ]
 
@@ -85,13 +116,18 @@ function colliding(item){
     let itemSize = 40
 
     return (
-        x < item.x + itemSize &&
-        x + playerSize > item.x &&
-        y < item.y + itemSize &&
-        y + playerSize > item.y
+        (x < item.x + itemSize) && (x + playerSize > item.x) && (y < item.y + itemSize) && (y + playerSize > item.y)
     )
 }
 
+function door1(dor){
+    let playerSize = 50
+    let itemSize = 100;
+    
+    return (
+        (x < dor.x + itemSize) && (x + playerSize > dor.x) && (y < dor.y + itemSize) && (y + playerSize > dor.y)
+    )
+}
 function move(){
     let speed = keys["Shift"] ? 40 : 10
 
@@ -123,7 +159,19 @@ function move(){
             item.item.style.top = "10px"
             item.item.style.right = (10 + index * 50) + "px"
         }
+        doors.forEach((dor, index) => {
+            dor.dor.style.left = dor.x + "px"
+            dor.dor.style.top = dor.y + "px"
+            // console.log(item.picked, door1(dor))
+            if(item.picked ==true && keys[" "] && door1(dor)){
+                    item.key = true;
+                    dor.dor.style.backgroundColor ="red";
+                    dor.dor.textContent="Opened";
+                    // console.log(doors.unlocked)
+                }
+            })
     })
+    
     requestAnimationFrame(move)
 }
 move()
