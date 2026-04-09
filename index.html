@@ -1,10 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Game</title>
-
 <style>
 *{
     margin: 0;
@@ -76,9 +75,8 @@ body{
 }
 </style>
 </head>
-
 <body>
-
+    
 <div id="board">
     <div id="screen">
         <div id="player">Me</div>
@@ -97,14 +95,16 @@ let screen = document.getElementById("screen")
 let x = 100
 let y = 100
 let keys = {}
+let inventory = {}
 
 let doors =[
-    { dor: document.getElementById("blueDoor"), x:1000, y:1000},
-    { dor: document.getElementById("greenDoor"), x:500, y:500},
+    { dor: document.getElementById("blueDoor"), x:1000, y:1000, type:"blue", unlocked:false},
+    { dor: document.getElementById("greenDoor"), x:500, y:500, type:"green", unlocked:false},
 ]
+
 let items = [
-    { item: document.getElementById("item"), x:600, y:600, picked:false },
-    { item: document.getElementById("item2"), x:800, y:500, picked:false, key:false },
+    { item: document.getElementById("item"), x:600, y:600, picked:false, type:"blue" },
+    { item: document.getElementById("item2"), x:800, y:500, picked:false, type:"green" },
     { item: document.getElementById("item3"), x:400, y:700, picked:false }
 ]
 
@@ -119,15 +119,14 @@ function colliding(item){
         (x < item.x + itemSize) && (x + playerSize > item.x) && (y < item.y + itemSize) && (y + playerSize > item.y)
     )
 }
-
 function door1(dor){
     let playerSize = 50
     let itemSize = 100;
-    
     return (
         (x < dor.x + itemSize) && (x + playerSize > dor.x) && (y < dor.y + itemSize) && (y + playerSize > dor.y)
     )
 }
+
 function move(){
     let speed = keys["Shift"] ? 40 : 10
 
@@ -155,23 +154,23 @@ function move(){
 
         if(!item.picked && colliding(item) && keys[" "]){
             item.picked = true
+            inventory[item.type] = true
             item.item.style.position = "fixed"
             item.item.style.top = "10px"
             item.item.style.right = (10 + index * 50) + "px"
         }
+
         doors.forEach((dor, index) => {
             dor.dor.style.left = dor.x + "px"
             dor.dor.style.top = dor.y + "px"
-            // console.log(item.picked, door1(dor))
-            if(item.picked ==true && keys[" "] && door1(dor)){
-                    item.key = true;
-                    dor.dor.style.backgroundColor ="red";
-                    dor.dor.textContent="Opened";
-                    // console.log(doors.unlocked)
-                }
-            })
+
+            if(!dor.unlocked &&door1(dor) &&inventory[dor.type] && keys[" "]){
+                dor.unlocked = true;
+                dor.dor.style.backgroundColor ="red";
+                dor.dor.textContent="Opened";
+            }
+        })
     })
-    
     requestAnimationFrame(move)
 }
 move()
