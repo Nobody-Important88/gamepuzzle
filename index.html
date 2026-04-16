@@ -175,7 +175,7 @@ function move(){
             item.item.style.left = item.x +"px"
             item.item.style.top = item.y + "px"
         }
-=        if(!item.picked && colliding(item) && (keys[" "] || keys["Space"])){
+        if(!item.picked && colliding(item) && (keys[" "] || keys["Space"])){
             item.picked = true
             inventory[item.type] = true
             item.item.style.position = "fixed"
