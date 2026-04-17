@@ -53,43 +53,22 @@ body{
     border-radius:50%;
     border: solid green 4px;
 }
-#item{
-    background-color: rgb(38, 0, 128);
-}
-#item2{
-    background-color: rgb(128, 0, 0);
-}
-#item3{
-    background-image: url(IMG_20251001_093540_599.jpg);
-}
-#blueDoor{
-    width: 100px;
-    height: 100px;
-    background-color: aqua;
-    border: solid blue 4px;
+
+#item{ background-color: aqua; }
+#item2{ background-color: lime; }
+#item3{ background-color: orange; }
+#item4{ background-color: purple; }
+
+#blueDoor{ background:aqua; border:solid blue 4px; }
+#greenDoor{ background:lime; border:solid green 4px; }
+#orangeDoor{ background:orange; border:solid brown 4px; }
+#PurpleDoor{ background:purple; border:solid black 4px; }
+.door{
+    width:100px;
+    height:100px;
     position:absolute;
 }
-#greenDoor{
-    width: 100px;
-    height: 100px;
-    background-color: rgb(0, 255, 51);
-    border: solid rgb(2, 139, 0) 4px;
-    position:absolute;
-}
-#orangeDoor{
-    width: 100px;
-    height: 100px;
-    background-color: rgb(255, 145, 0);
-    border: solid rgb(139, 51, 0) 4px;
-    position:absolute;
-}
-#PurpleDoor{
-    width: 100px;
-    height: 100px;
-    background-color: rgb(140, 0, 255);
-    border: solid rgb(44, 0, 78) 4px;
-    position:absolute;
-}
+
 </style>
 </head>
 <body>
@@ -102,10 +81,10 @@ body{
         <div id="item3" class="item">Key3</div>
         <div id="item4" class="item">Key4</div>
 
-        <div id="blueDoor">Closed</div>
-        <div id="greenDoor">Closed</div>
-        <div id="orangeDoor">Closed</div>
-        <div id="PurpleDoor">Closed</div>
+        <div id="blueDoor" class="door">Closed</div>
+        <div id="greenDoor" class="door">Closed</div>
+        <div id="orangeDoor" class="door">Closed</div>
+        <div id="PurpleDoor" class="door">Closed</div>
     </div>
 </div>
 
@@ -129,7 +108,6 @@ let items = [
     { item: document.getElementById("item2"), x:600, y:600, picked:false, type:"green" },
     { item: document.getElementById("item3"), x:600, y:700, picked:false, type:"orange" },
     { item: document.getElementById("item4"), x:600, y:800, picked:false, type:"purple" },
-
 ]
 
 document.addEventListener("keydown", event => keys[event.key] = true)
@@ -143,6 +121,25 @@ function colliding(item){
         (x < item.x + itemSize) && (x + playerSize > item.x) && (y < item.y + itemSize) && (y + playerSize > item.y)
     )
 }
+function blocked(newX, newY){
+    return doors.some(dor => {
+        if(dor.unlocked) return false
+        return (
+            newX < dor.x + 80 &&
+            newX + 30 > dor.x &&
+            newY < dor.y + 80 &&
+            newY + 30 > dor.y
+        )
+    })
+}
+function contact(dor){
+    return (
+        x < dor.x + 100 &&
+        x + 50 > dor.x &&
+        y < dor.y + 100 &&
+        y + 50 > dor.y
+    )
+}
 function door1(dor){
     let playerSize = 50
     let itemSize = 100;
@@ -154,16 +151,23 @@ function door1(dor){
 function move(){
     let speed = keys["Shift"] ? 40 : 10
 
-    if(keys["ArrowUp"]) y -= speed
-    if(keys["ArrowDown"]) y += speed
-    if(keys["ArrowLeft"]) x -= speed
-    if(keys["ArrowRight"]) x += speed
+    let newX = x
+    let newY = y
 
-    if(x < 0) x = 0
-    if(y < 0) y = 0
-    if(x > 2000) x = 2000
-    if(y > 2000) y = 2000
+    if(keys["ArrowUp"]) newY -= speed
+    if(keys["ArrowDown"]) newY += speed
+    if(keys["ArrowLeft"]) newX -= speed
+    if(keys["ArrowRight"]) newX += speed
 
+    if(newX < 0) newX = 0
+    if(newY < 0) newY = 0
+    if(newX > 1950) newX = 1950
+    if(newY > 1950) newY = 1950
+
+    if(!blocked(newX, newY)){
+        x = newX
+        y = newY
+    }
     player.style.left = x + "px"
     player.style.top = y + "px"
 
@@ -175,8 +179,8 @@ function move(){
             item.item.style.left = item.x +"px"
             item.item.style.top = item.y + "px"
         }
-// !item.picked && colliding(item) && 
-        if(!item.picked && colliding(item) && (keys[" "] || keys["Space"])){
+
+        if(!item.picked && colliding(item) && keys[" "]){
             item.picked = true
             inventory[item.type] = true
             item.item.style.position = "fixed"
@@ -188,7 +192,7 @@ function move(){
             dor.dor.style.left = dor.x + "px"
             dor.dor.style.top = dor.y + "px"
 
-            if(!dor.unlocked && door1(dor) &&inventory[dor.type] && keys[" "]){
+        if(!dor.unlocked && contact(dor) && inventory[dor.type] && keys[" "]){
                 dor.unlocked = true
                 dor.dor.style.backgroundColor ="red"
                 dor.dor.textContent="Opened"
