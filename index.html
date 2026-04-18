@@ -27,6 +27,34 @@ body{
     border:4px solid;
     position:relative;
 }
+#ui{
+    position:absolute;
+    top:10px;
+    left:10px;
+    width:300px;
+    padding:10px;
+    background:rgba(0,0,0,0.6);
+    color:white;
+    border-radius:10px;
+    z-index:10;
+}
+
+
+#inventory{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+}
+
+
+.slot{
+    width:40px;
+    height:40px;
+    border:2px solid white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
 
 #screen{
     width:2000px;
@@ -74,6 +102,10 @@ body{
 <body>
     
 <div id="board">
+    <div id="ui">
+        <div><strong>Inventory</strong></div>
+        <div id="inventory"></div>
+    </div>
     <div id="screen">
         <div id="player">Me</div>
         <div id="item" class="item">Key1</div>
@@ -91,10 +123,13 @@ body{
 <script>
 let player = document.getElementById("player")
 let screen = document.getElementById("screen")
+let inventoryUI = document.getElementById("inventory")
+
 let x = 100
 let y = 100
 let keys = {}
 let inventory = {}
+let slotss = {}
 
 let doors =[
     { dor: document.getElementById("blueDoor"), x:1000, y:1000, type:"blue", unlocked:false},
@@ -112,6 +147,7 @@ let items = [
 
 document.addEventListener("keydown", event => keys[event.key] = true)
 document.addEventListener("keyup", event => keys[event.key] = false)
+
 
 function colliding(item){
     let playerSize = 50
@@ -140,6 +176,21 @@ function contact(dor){
         y + 50 > dor.y
     )
 }
+function adinventory(type){
+    if(!inventory[type]){
+        inventory[type] = 0
+        slotss[type] = []
+    }
+    inventory[type]++
+
+    let slot = document.createElement("div")
+    slot.className = "slot"
+    slot.textContent = type
+
+    inventoryUI.appendChild(slot)
+    slotss[type].push(slot)
+}
+
 function door1(dor){
     let playerSize = 50
     let itemSize = 100;
@@ -171,8 +222,8 @@ function move(){
     player.style.left = x + "px"
     player.style.top = y + "px"
 
-    screen.style.left= (250-x)+ "px"
-    screen.style.top= (250-y)+ "px"
+    screen.style.left = (400 - x) + "px"
+    screen.style.top = (300 - y) + "px"
 
     items.forEach((item, index) => {
         if(!item.picked){
@@ -182,33 +233,29 @@ function move(){
 
         if(!item.picked && colliding(item) && keys[" "]){
             item.picked = true
-            inventory[item.type] = true
-            item.item.style.position = "fixed"
-            item.item.style.top = "60px"
-            item.item.style.left = (100 + index * 60) + "px"
+            adinventory(item.type)
+            item.picked = true
+            item.item.style.display = "none"
         }
+    });
 
-        doors.forEach((dor, index) => {
-            dor.dor.style.left = dor.x + "px"
-            dor.dor.style.top = dor.y + "px"
+    doors.forEach((dor, index) => {
+        dor.dor.style.left = dor.x + "px"
+        dor.dor.style.top = dor.y + "px"
 
         if(!dor.unlocked && contact(dor) && inventory[dor.type] && keys[" "]){
-                dor.unlocked = true
-                dor.dor.style.backgroundColor ="red"
-                dor.dor.textContent="Opened"
+            dor.unlocked = true
+            dor.dor.style.backgroundColor = "red"
+            dor.dor.textContent = "Opened"
+            inventory[dor.type]--
+            let slot = slotss[dor.type].pop()
+            if(slot) slot.remove()
+        }
+    });
 
-                items.forEach(item => {
-                    if(item.type === dor.type){
-                    item.item.style.display ="none"
-            }
-        })
-        inventory[dor.type]=false
-            }
-        })
-    })
     requestAnimationFrame(move)
 }
-    move()
+move()
 </script>
 </body>
 </html>
