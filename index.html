@@ -10,7 +10,13 @@
     padding: 0;
     box-sizing: border-box;
 }
-
+body, #board, #screen, #ui {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    cursor: default;
+}
 body{
     width: 100vw;
     height: 100vh;
@@ -85,6 +91,7 @@ body{
 #item3{ background-color: orange; }
 #item4{ background-color: purple; }
 #item5{ background-color: violet; }
+#item6{ background-color: yellow; }
 
 #light{
     width:120px;
@@ -115,6 +122,11 @@ body{
     height:100px;
     position:absolute;
 }
+.wall{
+    position:absolute;
+    background:rgba(0,0,0,0.8);
+    border:2px solid white;
+}
 </style>
 </head>
 <body>
@@ -134,6 +146,7 @@ body{
         <div id="item2" class="item">Key2</div>
         <div id="item3" class="item">Key3</div>
         <div id="item4" class="item">Key4</div>
+        <div id="item6" class="item">Testkey</div>
 
         <div id="item5" class="item">light</div>
 
@@ -144,6 +157,10 @@ body{
         <div id="greenDoor" class="door">Closed</div>
         <div id="orangeDoor" class="door">Closed</div>
         <div id="PurpleDoor" class="door">Closed</div>
+        
+        <div class="wall" id="wall1"></div>
+        <div class="wall" id="wall2"></div>
+        <div class="wall" id="wall3"></div>
     </div>
 </div>
 
@@ -176,24 +193,38 @@ let items = [
     { item: document.getElementById("item3"), x:600, y:700, picked:false, type:"orange" },
     { item: document.getElementById("item4"), x:600, y:800, picked:false, type:"purple" },
     { item: document.getElementById("item5"), x:650, y:900, picked:false, type:"light" },
+    { item: document.getElementById("item6"), x:750, y:1000, picked:false, type:"yellow" },
 ]
 
-document.addEventListener("keydown", event => keys[event.key] = true)
-document.addEventListener("keyup", event => keys[event.key] = false)
+let walls = [
+    { wall: document.getElementById("wall1"), x: 300, y: 300, w: 600, h: 20 },
+    { wall: document.getElementById("wall2"), x: 300, y: 300, w: 20, h: 600 },
+    { wall: document.getElementById("wall3"), x: 900, y: 500, w: 400, h: 20 },
+]
+walls.push(
+    { wall: document.createElement("div"), x:0, y:0, w:6000, h:20 },
+    { wall: document.createElement("div"), x:0, y:4000, w:6000, h:20 },
+    { wall: document.createElement("div"), x:0, y:0, w:20, h:4000 },
+    { wall: document.createElement("div"), x:6000, y:0, w:20, h:4000 }
+);
+
+walls.slice(-4).forEach(w => {
+    w.wall.className = "wall"
+    screen.appendChild(w.wall)
+});
+document.addEventListener("keydown", e => keys[e.key] = true)
+document.addEventListener("keyup", e => keys[e.key] = false)
 
 function colliding(item){
-    let playerSize = 50
-    let itemSize = 40
-
     return (
-        (x < item.x + itemSize) &&
-        (x + playerSize > item.x) &&
-        (y < item.y + itemSize) &&
-        (y + playerSize > item.y)
+        x < item.x + 40 &&
+        x + 50 > item.x &&
+        y < item.y + 40 &&
+        y + 50 > item.y
     )
 }
 
-function blocked(newX, newY){
+function locked(newX, newY){
     return doors.some(dor => {
         if(dor.unlocked) return false
         return (
@@ -203,6 +234,20 @@ function blocked(newX, newY){
             newY + 30 > dor.y
         )
     })
+}
+
+function blocked(newX, newY){
+    for(let w of walls){
+        if(
+            newX < w.x + w.w &&
+            newX + 50 > w.x &&
+            newY < w.y + w.h &&
+            newY + 50 > w.y
+        ){
+            return true
+        }
+    }
+    return false
 }
 
 function contact(dor){
@@ -225,14 +270,21 @@ function adinventory(type){
 
     let slot = document.createElement("div")
     slot.className = "slot"
+    slot.id = type;
     slot.textContent = type
 
     inventoryUI.appendChild(slot)
     slotss[type].push(slot)
 }
+const MapX = 6000;
+const MapY = 4000;
+
+screen.style.width = MapX + "px"
+screen.style.height = MapY + "px"
+const max = MapX -50 || MapY -50
 
 function move(){
-    let speed = keys["Shift"] ? 40 : 10
+    let speed = keys["Shift"]? 40:10
 
     let newX = x
     let newY = y
@@ -244,10 +296,17 @@ function move(){
 
     if(newX < 0) newX = 0
     if(newY < 0) newY = 0
-    if(newX > 1950) newX = 1950
-    if(newY > 1950) newY = 1950
+    if(newX > max) newX = max
+    if(newY > max) newY = max
 
-    if(!blocked(newX, newY)){
+    walls.forEach(w => {
+        w.wall.style.left = w.x + "px"
+        w.wall.style.top = w.y + "px"
+        w.wall.style.width = w.w + "px"
+        w.wall.style.height = w.h + "px"
+    })
+
+    if(!locked(newX, newY) && !blocked(newX, newY)){
         x = newX
         y = newY
     }
@@ -260,22 +319,26 @@ function move(){
 
     if(keys["x"]){
         keys["x"] = false
-
-        if(inventory["light"] > 0){
-            on = !on
-        }
+        if(inventory["light"] > 0) on = !on
     }
 
     if(keys["q"]){
         keys["q"] = false
-
         let dtype = order.shift()
 
         if(dtype){
-            inventory[dtype]--
-
-            let slot = slotss[dtype].shift()
-            if(slot) slot.remove()
+           
+            let slot = document.querySelector(`#${dtype}`)
+            if(slot) {
+                inventoryUI.removeChild(slot)
+                delete inventory[dtype]
+                // inventory[dtype]--
+                delete slotss[dtype]
+                // let slot = slotss[dtype].shift()
+                // if(slot) slot.remove()
+                 console.log(inventoryUI, inventory, slotss, order)
+            }
+            
 
             let dropp = items.find(i => i.type === dtype && i.picked)
 
@@ -289,65 +352,69 @@ function move(){
     }
 
     if(on){
-        light.style.display = "block"
-        light.style.left = (x - 35) + "px"
-        light.style.top = (y - 35) + "px"
+    light.style.display = "block"
+    light.style.left = (x - 35) + "px"
+    light.style.top = (y - 35) + "px"
 
-        let ax = light.offsetLeft
-        let ay = light.offsetTop
-        let lightSize = light.offsetWidth
+    let ax = x
+    let ay = y
+    let lightSize = 120
 
-        secrets.forEach(sec => {
-            let sx = sec.offsetLeft
-            let sy = sec.offsetTop
+    secrets.forEach(sec => {
+        let sx = sec.offsetLeft
+        let sy = sec.offsetTop
 
-            let touching =
-                ax < sx + 120 &&
-                ax + lightSize > sx &&
-                ay < sy + 30 &&
-                ay + lightSize > sy
+        let touching =
+            ax < sx + 120 &&
+            ax + lightSize > sx &&
+            ay < sy + 30 &&
+            ay + lightSize > sy
 
-            if(touching){
-                sec.style.color = "darkorange"
-                sec.style.textShadow = "0 0 10px purple"
-            } else {
-                sec.style.color = "rgba(255,255,255,0)"
-                sec.style.textShadow = "none"
-            }
-        })
-
-    } else {
-        light.style.display = "none"
-        secrets.forEach(sec => {
+        if(touching){
+            sec.style.color = "darkorange"
+            sec.style.textShadow = "0 0 10px purple"
+        } else {
             sec.style.color = "rgba(255,255,255,0)"
             sec.style.textShadow = "none"
-        })
-    }
+        }
+    })
 
-    items.forEach((item) => {
+} else {
+    light.style.display = "none"
+    secrets.forEach(sec => {
+        sec.style.color = "rgba(255,255,255,0)"
+        sec.style.textShadow = "none"
+    })
+}
 
+    items.forEach(item => {
         if(!item.picked){
             item.item.style.left = item.x + "px"
             item.item.style.top = item.y + "px"
         }
 
         if(!item.picked && colliding(item) && keys[" "]){
+           
+
             item.picked = true
 
             if(item.type === "light"){
-                if(!inventory["light"]) inventory["light"] = 0
-                inventory["light"]++
+                inventory["light"] = (inventory["light"] || 0) + 1
                 on = false
             } else {
-                if(Object.values(inventory).reduce((a,b)=>a+b,0) < 4){
-                    adinventory(item.type)
+                let count = 0
+                for(let k in inventory){
+                     if(count == 4) return
+                    if(k !== "light") count += inventory[k]
                 }
+                if(count < 4) adinventory(item.type)
             }
+
             item.item.style.display = "none"
         }
     })
 
-    doors.forEach((dor) => {
+    doors.forEach(dor => {
         dor.dor.style.left = dor.x + "px"
         dor.dor.style.top = dor.y + "px"
 
@@ -356,13 +423,90 @@ function move(){
             dor.dor.style.backgroundColor = "red"
             dor.dor.textContent = "Opened"
 
-            inventory[dor.type]--
-            let slot = slotss[dor.type].pop()
-            if(slot) slot.remove()
+            let slot = document.querySelector(`#${dor.type}`)
+            inventoryUI.removeChild(slot)
+            delete inventory[dor.type]
+            delete slotss[dor.type]
+            order.shift()
+            console.log(inventoryUI, inventory, slotss, order)
+            // let slot = slotss[dor.type].pop()
+            // if(slot) slot.remove()
         }
     })
+
     requestAnimationFrame(move)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//stuff for cordinates by chatgpt
+(() => {
+    const screen = document.getElementById("screen");
+    const ui = document.getElementById("ui");
+
+    let info = document.createElement("div");
+    info.style.marginTop = "10px";
+    info.style.color = "yellow";
+    info.style.whiteSpace = "pre-line";
+    info.style.fontSize = "14px";
+    ui.appendChild(info);
+
+    let mouseX = 0;
+    let mouseY = 0;
+
+    let startX = 0;
+    let startY = 0;
+
+    let setStart = true; // auto-sets origin once when tool loads
+
+    // update mouse position constantly
+    screen.addEventListener("mousemove", (e) => {
+        let rect = screen.getBoundingClientRect();
+        mouseX = Math.floor(e.clientX - rect.left);
+        mouseY = Math.floor(e.clientY - rect.top);
+
+        // set starting anchor automatically once
+        if (setStart) {
+            startX = mouseX;
+            startY = mouseY;
+            setStart = false;
+        }
+    });
+
+    function update() {
+        let x = Math.min(startX, mouseX);
+        let y = Math.min(startY, mouseY);
+        let w = Math.abs(mouseX - startX);
+        let h = Math.abs(mouseY - startY);
+
+        info.textContent =
+            "LIVE WALL COORDS (AUTO)\n\n" +
+            "Mouse X: " + mouseX +
+            "\nMouse Y: " + mouseY +
+            "\n\nX: " + x +
+            "\nY: " + y +
+            "\nW: " + w +
+            "\nH: " + h +
+            "\n\n(Starts from first mouse position)";
+        
+        requestAnimationFrame(update);
+    }
+
+    update();
+})();
+
+
 move()
 </script>
 </body>
