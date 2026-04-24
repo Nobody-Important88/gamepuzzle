@@ -1,491 +1,572 @@
-<!DOCTYPE html> 
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game</title>
-<style>
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-body, #board, #screen, #ui {
-    user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
-    cursor: default;
-}
-body{
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body,
+      #board,
+      #screen,
+      #ui {
+        user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        -moz-user-select: none;
+        cursor: default;
+      }
+      body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-#board{
-    width:90%;
-    height:90%;
-    overflow:hidden;
-    border:4px solid;
-    position:relative;
-}
-#ui{
-    position:absolute;
-    top:10px;
-    left:10px;
-    width:300px;
-    padding:10px;
-    background:rgba(0,0,0,0.6);
-    color:white;
-    border-radius:10px;
-    z-index:10;
-}
+      #board {
+        width: 1800px;
+        height: 940px;
+        /* width: 90%;
+        height: 90%; */
+        overflow: hidden;
+        border: 4px solid;
+        position: relative;
+        background-image: url(space.png);
 
-#inventory{
-    display:flex;
-    gap:10px;
-    margin-top:10px;
-}
+      }
+      #ui {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 300px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border-radius: 10px;
+        z-index: 10;
+      }
 
-.slot{
-    width:40px;
-    height:40px;
-    border:2px solid white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
+      #inventory {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
 
-#screen{
-    width:2000px;
-    height:2000px;
-    position:absolute;
-    background-image: url(IMG_20251001_093540_599.jpg);
-    background-repeat: repeat;
-}
+      .slot {
+        width: 40px;
+        height: 40px;
+        border: 2px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-#player{
-    width:50px;
-    height:50px;
-    background:green;
-    position:absolute;
-    color:white;
-    text-align:center;
-    line-height:50px;
-}
+    #screen {
+        width: 2000px;
+        height: 2000px;
+        position: absolute;
 
-.item{
-    width:40px;
-    height:40px;
-    position:absolute;
-    border-radius:50%;
-    border: solid green 4px;
-}
+        background:
+        /* vertical line */
+        linear-gradient(to right, transparent 49.5%, black 49.5%, black 50.5%, transparent 50.5%),
+        
+        /* horizontal line */
+        linear-gradient(to bottom, transparent 49.5%, black 49.5%, black 50.5%, transparent 50.5%),
 
-#item{ background-color: aqua; }
-#item2{ background-color: lime; }
-#item3{ background-color: orange; }
-#item4{ background-color: purple; }
-#item5{ background-color: violet; }
+        /* quadrants */
+        conic-gradient(
+        rgb(254, 162, 162) 0deg 90deg,
+        rgb(191, 191, 255) 90deg 180deg,
+        rgb(255, 255, 185) 180deg 270deg,
+        rgb(255, 182, 218) 270deg 360deg
+        );
+    }
 
-#light{
-    width:120px;
-    height:120px;
-    position:absolute;
-    border-radius:50%;
-    background: radial-gradient(rgba(128,0,128,0.5), rgba(128,0,128,0));
-    pointer-events:none;
-    display:none;
-}
+      #player {
+        width: 50px;
+        height: 50px;
+        background: green;
+        position: absolute;
+        color: white;
+        text-align: center;
+        line-height: 50px;
+      }
 
-.secret{
-    position:absolute;
-    color:rgba(255,255,255,0);
-    font-size:20px;
-    pointer-events:none;
-    transition:0.3s;
-    background-color: brown;
-}
+      .item {
+        width: 40px;
+        height: 40px;
+        position: absolute;
+        border-radius: 50%;
+        border: solid green 4px;
+      }
 
-#blueDoor{ background:aqua; border:solid blue 4px; }
-#greenDoor{ background:lime; border:solid green 4px; }
-#orangeDoor{ background:orange; border:solid brown 4px; }
-#PurpleDoor{ background:purple; border:solid black 4px; }
+      #item {
+        background-color: lime;
+}
+      #item2 {
+        background-color: aqua;
+      }
+      #item3 {
+        background-color: orange;
+      }
+      #item4 {
+        background-color: purple;
+      }
+      #item5 {
+        background-color: violet;
+      }
+      #item6 {
+        background-color: yellow;
+      }
 
-.door{
-    width:100px;
-    height:100px;
-    position:absolute;
-}
-.wall{
-    position:absolute;
-    background:rgba(0,0,0,0.8);
-    border:2px solid white;
-}
-</style>
-</head>
-<body>
-    
-<div id="board">
-    <div id="ui">
+      #light {
+        width: 120px;
+        height: 120px;
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(
+          rgba(128, 0, 128, 0.5),
+          rgba(128, 0, 128, 0)
+        );
+        pointer-events: none;
+        display: none;
+      }
+
+      .secret {
+        position: absolute;
+        color: rgba(255, 255, 255, 0);
+        font-size: 20px;
+        pointer-events: none;
+        transition: 0.3s;
+        background-color: brown;
+      }
+
+      #blueDoor {
+        background: aqua;
+        border: solid blue 4px;
+      }
+      #greenDoor {
+        background: lime;
+        border: solid green 4px;
+      }
+      #orangeDoor {
+        background: orange;
+        border: solid brown 4px;
+      }
+      #PurpleDoor {
+        background: purple;
+        border: solid black 4px;
+      }
+
+      .door {
+        width: 100px;
+        height: 100px;
+        position: absolute;
+      }
+      .wall {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="board">
+      <div id="ui">
         <div id="inventory"></div>
-    </div>
+      </div>
 
-    <div id="screen">
-
+      <div id="screen">
         <div id="light"></div>
 
         <div id="player">Me</div>
 
-        <div id="item" class="item">Key1</div>
-        <div id="item2" class="item">Key2</div>
-        <div id="item3" class="item">Key3</div>
-        <div id="item4" class="item">Key4</div>
+        <div id="item" class="item">Key1G</div>
+        <div id="item2" class="item">Key2B</div>
+        <div id="item3" class="item">Key3O</div>
+        <div id="item4" class="item">Key4P</div>
+        <div id="item6" class="item">testYellow</div>
 
         <div id="item5" class="item">light</div>
 
-        <div class="secret" style="left:300px; top:300px;">You found Me lil bro</div>
-        <div class="secret" style="left:1200px; top:400px;">The trustworthy</div>
+        <div class="secret" style="left: 300px; top: 300px">
+          You found Me lil bro
+        </div>
+        <div class="secret" style="left: 1200px; top: 400px">
+          The trustworthy
+        </div>
 
         <div id="blueDoor" class="door">Closed</div>
         <div id="greenDoor" class="door">Closed</div>
         <div id="orangeDoor" class="door">Closed</div>
         <div id="PurpleDoor" class="door">Closed</div>
-        
+
         <div class="wall" id="wall1"></div>
         <div class="wall" id="wall2"></div>
         <div class="wall" id="wall3"></div>
+      </div>
     </div>
-</div>
 
-<script>
-let player = document.getElementById("player")
-let screen = document.getElementById("screen")
-let inventoryUI = document.getElementById("inventory")
-let light = document.getElementById("light")
+    <script>
+      let player = document.getElementById("player")
+      let screen = document.getElementById("screen")
+      let inventoryUI = document.getElementById("inventory")
+      let light = document.getElementById("light")
+      let on = false
+      let secrets = document.querySelectorAll(".secret")
 
-let on = false
-let secrets = document.querySelectorAll(".secret")
+      let x = 100
+      let y = 100
+      let keys = {}
+      let inventory = {}
+      let slotss = {}
+      let order = []
 
-let x = 100
-let y = 100
-let keys = {}
-let inventory = {}
-let slotss = {}
-let order = []
+      let doors = [
+        {dor: document.getElementById("blueDoor"), x: 2000, y: 1000, type: "blue", unlocked: false,},
+        {dor: document.getElementById("orangeDoor"), x: 1500, y: 1000, type: "orange", unlocked: false,},
+        {dor: document.getElementById("PurpleDoor"), x: 1000, y: 1000, type: "purple", unlocked: false,},
+        {dor: document.getElementById("greenDoor"), x: 500, y: 1000, type: "green", unlocked: false,},
+      ]
 
-let doors = [
-    { dor: document.getElementById("blueDoor"), x:1000, y:1000, type:"blue", unlocked:false},
-    { dor: document.getElementById("greenDoor"), x:500, y:500, type:"green", unlocked:false},
-    { dor: document.getElementById("orangeDoor"), x:800, y:800, type:"orange", unlocked:false},
-    { dor: document.getElementById("PurpleDoor"), x:700, y:700, type:"purple", unlocked:false},
-]
+      let items = [
+        {item: document.getElementById("item"), x: 2000, y: 900,picked: false, type: "green"},
+        {item: document.getElementById("item2"), x: 1500, y: 900,picked: false, type: "blue"},
+        {item: document.getElementById("item3"), x: 1000, y: 900,picked: false, type: "orange"},
+        {item: document.getElementById("item4"), x: 500, y: 900,picked: false, type: "purple"},
+        {item: document.getElementById("item5"), x: 1500, y: 1200,picked: false, type: "light"},
+        {item: document.getElementById("item6"), x: 630, y: 1200,picked: false, type: "yellow"},
+      ]
 
-let items = [
-    { item: document.getElementById("item"), x:600, y:500, picked:false, type:"blue" },
-    { item: document.getElementById("item2"), x:600, y:600, picked:false, type:"green" },
-    { item: document.getElementById("item3"), x:600, y:700, picked:false, type:"orange" },
-    { item: document.getElementById("item4"), x:600, y:800, picked:false, type:"purple" },
-    { item: document.getElementById("item5"), x:650, y:900, picked:false, type:"light" },
-]
+      let walls = [
+        {
+          wall: document.getElementById("wall1"),
+          x: 300,
+          y: 300,
+          w: 600,
+          h: 20,
+        },
+        {
+          wall: document.getElementById("wall2"),
+          x: 300,
+          y: 300,
+          w: 20,
+          h: 600,
+        },
+        {
+          wall: document.getElementById("wall3"),
+          x: 900,
+          y: 500,
+          w: 400,
+          h: 20,
+        },
+      ]
+      walls.push(
+        { wall: document.createElement("div"), x: 0, y: 0, w: 6000, h: 20 },
+        { wall: document.createElement("div"), x: 0, y: 4000, w: 6000, h: 20 },
+        { wall: document.createElement("div"), x: 0, y: 0, w: 20, h: 4000 },
+        { wall: document.createElement("div"), x: 6000, y: 0, w: 20, h: 4000 },
+      )
 
-let walls = [
-    { el: document.getElementById("wall1"), x: 300, y: 300, w: 600, h: 20 },
-    { el: document.getElementById("wall2"), x: 300, y: 300, w: 20, h: 600 },
-    { el: document.getElementById("wall3"), x: 900, y: 500, w: 400, h: 20 },
-]
-walls.push(
-    // top wall
-    { el: document.createElement("div"), x:0, y:0, w:4000, h:20 },
-    // bottom wall
-    { el: document.createElement("div"), x:0, y:3980, w:4000, h:20 },
-    // left wall
-    { el: document.createElement("div"), x:0, y:0, w:20, h:4000 },
-    // right wall
-    { el: document.createElement("div"), x:3980, y:0, w:20, h:4000 }
-);
+      walls.slice(-4).forEach((w) => {
+        w.wall.className = "wall"
+        screen.appendChild(w.wall)
+      })
+      document.addEventListener("keydown", (e) => (keys[e.key] = true))
+      document.addEventListener("keyup", (e) => (keys[e.key] = false))
 
-// attach them to screen
-walls.slice(-4).forEach(w => {
-    w.el.className = "wall";
-    screen.appendChild(w.el);
-});
-document.addEventListener("keydown", e => keys[e.key] = true)
-document.addEventListener("keyup", e => keys[e.key] = false)
-
-function colliding(item){
-    return (
-        x < item.x + 40 &&
-        x + 50 > item.x &&
-        y < item.y + 40 &&
-        y + 50 > item.y
-    )
-}
-
-function blocked(newX, newY){
-    return doors.some(dor => {
-        if(dor.unlocked) return false
+      function colliding(item) {
         return (
+          x < item.x + 40 &&
+          x + 50 > item.x &&
+          y < item.y + 40 &&
+          y + 50 > item.y
+        )
+      }
+
+      function locked(newX, newY) {
+        return doors.some((dor) => {
+          if (dor.unlocked) return false
+          return (
             newX < dor.x + 80 &&
             newX + 30 > dor.x &&
             newY < dor.y + 80 &&
             newY + 30 > dor.y
-        )
-    })
-}
+          )
+        })
+      }
 
-function wallBlocked(newX, newY){
-    for(let w of walls){
-        if(
+      function blocked(newX, newY) {
+        for (let w of walls) {
+          if (
             newX < w.x + w.w &&
             newX + 50 > w.x &&
             newY < w.y + w.h &&
             newY + 50 > w.y
-        ){
+          ) {
             return true
+          }
         }
-    }
-    return false
-}
+        return false
+      }
 
-function contact(dor){
-    return (
-        x < dor.x + 100 &&
-        x + 50 > dor.x &&
-        y < dor.y + 100 &&
-        y + 50 > dor.y
-    )
-}
+      function contact(dor) {
+        return (
+          x < dor.x + 100 && x + 50 > dor.x && y < dor.y + 100 && y + 50 > dor.y
+        )
+      }
 
-function adinventory(type){
-    if(!inventory[type]){
-        inventory[type] = 0
-        slotss[type] = []
-    }
+      function adinventory(type) {
+        if (!inventory[type]) {
+          inventory[type] = 0
+          slotss[type] = []
+        }
 
-    inventory[type]++
-    order.push(type)
+        inventory[type]++
+        order.push(type)
 
-    let slot = document.createElement("div")
-    slot.className = "slot"
-    slot.textContent = type
+        let slot = document.createElement("div")
+        slot.className = "slot"
+        slot.id = type
+        slot.textContent = type
 
-    inventoryUI.appendChild(slot)
-    slotss[type].push(slot)
-}
-const WORLD_SIZE = 4000;
+        inventoryUI.appendChild(slot)
+        slotss[type].push(slot)
+      }
+      const MapX = 6000
+      const MapY = 4000
 
-// expand map (2x)
-screen.style.width = WORLD_SIZE + "px";
-screen.style.height = WORLD_SIZE + "px";
+      screen.style.width = MapX + "px"
+      screen.style.height = MapY + "px"
+      const maxX = MapX - 50
+      const maxY = MapY - 50
 
-// update movement limit safely
-const MAX = WORLD_SIZE - 50;
+      function move() {
+        let speed = keys["Shift"]? 40:10
 
-function move(){
-    let speed = keys["Shift"] ? 40 : 10
+        let newX = x
+        let newY = y
 
-    let newX = x
-    let newY = y
+        if (keys["ArrowUp"] || keys["w"]) newY -= speed
+        if (keys["ArrowDown"] || keys["s"]) newY += speed
+        if (keys["ArrowLeft"] || keys["a"]) newX -= speed
+        if (keys["ArrowRight"] || keys["d"]) newX += speed
 
-    if(keys["ArrowUp"]) newY -= speed
-    if(keys["ArrowDown"]) newY += speed
-    if(keys["ArrowLeft"]) newX -= speed
-    if(keys["ArrowRight"]) newX += speed
+        if (newX < 0) newX = 0
+        if (newY < 0) newY = 0
+        if (newX > maxX) newX = maxX
+        if (newY > maxY) newY = maxY
 
-    if(newX < 0) newX = 0
-    if(newY < 0) newY = 0
-    if(newX > MAX) newX = MAX
-    if(newY > MAX) newY = MAX
+        walls.forEach((w) => {
+          w.wall.style.left = w.x + "px"
+          w.wall.style.top = w.y + "px"
+          w.wall.style.width = w.w + "px"
+          w.wall.style.height = w.h + "px"
+        })
 
-    walls.forEach(w => {
-        w.el.style.left = w.x + "px"
-        w.el.style.top = w.y + "px"
-        w.el.style.width = w.w + "px"
-        w.el.style.height = w.h + "px"
-    })
+        if (!locked(newX, newY) && !blocked(newX, newY)) {
+          x = newX
+          y = newY
+        }
 
-    if(!blocked(newX, newY) && !wallBlocked(newX, newY)){
-        x = newX
-        y = newY
-    }
+        player.style.left = x + "px"
+        player.style.top = y + "px"
 
-    player.style.left = x + "px"
-    player.style.top = y + "px"
+        screen.style.left = 1000 - x + "px"
+        screen.style.top = 500 - y + "px"
 
-    screen.style.left = (400 - x) + "px"
-    screen.style.top = (300 - y) + "px"
+        if (keys["x"]) {
+          keys["x"] = false
+          if (inventory["light"] > 0) on = !on
+        }
 
-    if(keys["x"]){
-        keys["x"] = false
-        if(inventory["light"] > 0) on = !on
-    }
+        if (keys["q"]) {
+          keys["q"] = false
+          let dtype = order.shift()
 
-    if(keys["q"]){
-        keys["q"] = false
-        let dtype = order.shift()
-
-        if(dtype){
-            inventory[dtype]--
-
-            let slot = slotss[dtype].shift()
-            if(slot) slot.remove()
-
-            let dropp = items.find(i => i.type === dtype && i.picked)
-
-            if(dropp){
-                dropp.picked = false
-                dropp.x = x
-                dropp.y = y
-                dropp.item.style.display = "block"
+          if (dtype) {
+            let slot = document.querySelector(`#${dtype}`)
+            if (slot) {
+              inventoryUI.removeChild(slot)
+              delete inventory[dtype]
+              // inventory[dtype]--
+              delete slotss[dtype]
+              // let slot = slotss[dtype].shift()
+              // if(slot) slot.remove()
+              console.log(inventoryUI, inventory, slotss, order)
             }
+
+            let dropp = items.find((i) => i.type === dtype && i.picked)
+
+            if (dropp) {
+              dropp.picked = false
+              dropp.x = x
+              dropp.y = y
+              dropp.item.style.display = "block"
+            }
+          }
         }
-    }
 
-    if(on){
-    light.style.display = "block"
-    light.style.left = (x - 35) + "px"
-    light.style.top = (y - 35) + "px"
+        if (on) {
+          light.style.display = "block"
+          light.style.left = x - 35 + "px"
+          light.style.top = y - 35 + "px"
 
-    let ax = x
-    let ay = y
-    let lightSize = 120
+          let ax = x
+          let ay = y
+          let lightSize = 120
 
-    secrets.forEach(sec => {
-        let sx = sec.offsetLeft
-        let sy = sec.offsetTop
+          secrets.forEach((sec) => {
+            let sx = sec.offsetLeft
+            let sy = sec.offsetTop
 
-        let touching =
-            ax < sx + 120 &&
-            ax + lightSize > sx &&
-            ay < sy + 30 &&
-            ay + lightSize > sy
+            let touching =
+              ax < sx + 120 &&
+              ax + lightSize > sx &&
+              ay < sy + 30 &&
+              ay + lightSize > sy
 
-        if(touching){
-            sec.style.color = "darkorange"
-            sec.style.textShadow = "0 0 10px purple"
+            if (touching) {
+              sec.style.color = "darkorange"
+              sec.style.textShadow = "0 0 10px purple"
+            } else {
+              sec.style.color = "rgba(255,255,255,0)"
+              sec.style.textShadow = "none"
+            }
+          })
         } else {
+          light.style.display = "none"
+          secrets.forEach((sec) => {
             sec.style.color = "rgba(255,255,255,0)"
             sec.style.textShadow = "none"
+          })
         }
-    })
 
-} else {
-    light.style.display = "none"
-    secrets.forEach(sec => {
-        sec.style.color = "rgba(255,255,255,0)"
-        sec.style.textShadow = "none"
-    })
-}
-
-    items.forEach(item => {
-        if(!item.picked){
+        items.forEach((item) => {
+          if (!item.picked) {
             item.item.style.left = item.x + "px"
             item.item.style.top = item.y + "px"
-        }
+          }
 
-        if(!item.picked && colliding(item) && keys[" "]){
-            item.picked = true
+          if (!item.picked && colliding(item) && keys[" "]) {
 
-            if(item.type === "light"){
+            if (item.type === "light") {
+                item.picked = true
                 inventory["light"] = (inventory["light"] || 0) + 1
                 on = false
+                item.item.style.display = "none"
             } else {
                 let count = 0
-                for(let k in inventory){
-                    if(k !== "light") count += inventory[k]
+                for (let k in Object.keys(inventory)) {
+                    if (k !== "light") count++
                 }
-                if(count < 4) adinventory(item.type)
-            }
+                
+                if (count <= 4) {
+                    item.picked = true 
+                    adinventory(item.type)
+                    item.item.style.display = "none"
+                }
+            } 
+          }
+        })
 
-            item.item.style.display = "none"
-        }
-    })
+        doors.forEach((dor) => {
+          dor.dor.style.left = dor.x + "px"
+          dor.dor.style.top = dor.y + "px"
 
-    doors.forEach(dor => {
-        dor.dor.style.left = dor.x + "px"
-        dor.dor.style.top = dor.y + "px"
-
-        if(!dor.unlocked && contact(dor) && inventory[dor.type] && keys[" "]){
+          if (
+            !dor.unlocked &&
+            contact(dor) &&
+            inventory[dor.type] &&
+            keys[" "]
+          ) {
             dor.unlocked = true
             dor.dor.style.backgroundColor = "red"
             dor.dor.textContent = "Opened"
 
-            inventory[dor.type]--
-            let slot = slotss[dor.type].pop()
-            if(slot) slot.remove()
-        }
-    })
+            let slot = document.querySelector(`#${dor.type}`)
+            inventoryUI.removeChild(slot)
+            delete inventory[dor.type]
+            delete slotss[dor.type]
+            order.shift()
+            console.log(inventoryUI, inventory, slotss, order)
+            // let slot = slotss[dor.type].pop()
+            // if(slot) slot.remove()
+          }
+        })
 
-    requestAnimationFrame(move)
-}
+        requestAnimationFrame(move)
+      }
 
+      //stuff for cordinates by chatgpt
+      (() => {
+        const screen = document.getElementById("screen");
+        const ui = document.getElementById("ui");
 
+        let info = document.createElement("div");
+        info.style.marginTop = "10px";
+        info.style.color = "yellow";
+        info.style.whiteSpace = "pre-line";
+        info.style.fontSize = "14px";
+        ui.appendChild(info);
 
-//stuff for cordinates by chatgpt
-(() => {
-    const screen = document.getElementById("screen");
-    const ui = document.getElementById("ui");
+        let mouseX = 0;
+        let mouseY = 0;
 
-    let info = document.createElement("div");
-    info.style.marginTop = "10px";
-    info.style.color = "yellow";
-    info.style.whiteSpace = "pre-line";
-    info.style.fontSize = "14px";
-    ui.appendChild(info);
+        let startX = 0;
+        let startY = 0;
 
-    let mouseX = 0;
-    let mouseY = 0;
+        let setStart = true; // auto-sets origin once when tool loads
 
-    let startX = 0;
-    let startY = 0;
+        // update mouse position constantly
+        screen.addEventListener("mousemove", (e) => {
+          let rect = screen.getBoundingClientRect();
+          mouseX = Math.floor(e.clientX - rect.left);
+          mouseY = Math.floor(e.clientY - rect.top);
 
-    let setStart = true; // auto-sets origin once when tool loads
-
-    // update mouse position constantly
-    screen.addEventListener("mousemove", (e) => {
-        let rect = screen.getBoundingClientRect();
-        mouseX = Math.floor(e.clientX - rect.left);
-        mouseY = Math.floor(e.clientY - rect.top);
-
-        // set starting anchor automatically once
-        if (setStart) {
+          // set starting anchor automatically once
+          if (setStart) {
             startX = mouseX;
             startY = mouseY;
             setStart = false;
-        }
-    });
+          }
+        });
 
-    function update() {
-        let x = Math.min(startX, mouseX);
-        let y = Math.min(startY, mouseY);
-        let w = Math.abs(mouseX - startX);
-        let h = Math.abs(mouseY - startY);
+        function update() {
+          let x = Math.min(startX, mouseX);
+          let y = Math.min(startY, mouseY);
+          let w = Math.abs(mouseX - startX);
+          let h = Math.abs(mouseY - startY);
 
-        info.textContent =
+          info.textContent =
             "LIVE WALL COORDS (AUTO)\n\n" +
-            "Mouse X: " + mouseX +
-            "\nMouse Y: " + mouseY +
-            "\n\nX: " + x +
-            "\nY: " + y +
-            "\nW: " + w +
-            "\nH: " + h +
+            "Mouse X: " +
+            mouseX +
+            "\nMouse Y: " +
+            mouseY +
+            "\n\nX: " +
+            x +
+            "\nY: " +
+            y +
+            "\nW: " +
+            w +
+            "\nH: " +
+            h +
             "\n\n(Starts from first mouse position)";
-        
-        requestAnimationFrame(update);
-    }
 
-    update();
-})();
+          requestAnimationFrame(update);
+        }
 
+        update();
+      })();
 
-
-
-move()
-</script>
-</body>
+      move()
+    </script>
+  </body>
 </html>
