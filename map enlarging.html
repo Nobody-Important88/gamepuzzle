@@ -28,6 +28,87 @@
         justify-content: center;
         align-items: center;
       }
+      #startScreen {
+      position:fixed; inset:0; z-index:500;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background: radial-gradient(ellipse at 50% 30%, #001a0e 0%, #03080f 70%);
+      gap:28px;
+      }
+    #startScreen.hidden { display:none; }
+
+    .start-ship {
+      font-size:90px; line-height:1;
+      filter: drop-shadow(0 0 24px var(--col-glow));
+      /* animation: shipFloat 3s ease-in-out infinite; */
+    }
+    /* @keyframes shipFloat {
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-14px); }
+    } */
+
+    .start-title {
+      font-family:'Orbitron',sans-serif;
+      /* font-size:clamp(28px,4vw,52px); */
+      font-weight:900;
+      letter-spacing:6px;
+      text-align:center;
+      color:#fff;
+      text-shadow: 0 0 30px var(--col-glow), 0 0 60px var(--col-glow);
+      animation: titlePulse 2.4s ease-in-out infinite;
+    }
+    /* @keyframes titlePulse {
+      0%,100%{ text-shadow:0 0 30px var(--col-glow),0 0 60px var(--col-glow); }
+      50%{ text-shadow:0 0 10px var(--col-glow),0 0 20px var(--col-glow); }
+    } */
+
+    .start-sub {
+      font-size:14px;
+      letter-spacing:3px;
+      color:rgba(0,255,178,0.55);
+      text-align:center;
+      max-width:560px;
+      line-height:1.7;
+    }
+
+    .syringe-warning {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      background:rgba(255,68,68,0.12);
+      border:1px solid rgba(255,68,68,0.4);
+      padding:10px 22px;
+      border-radius:4px;
+      color:red;
+      font-size:13px;
+      letter-spacing:2px;
+    }
+    @keyframes warnFlash {
+      0%,100%{ opacity:1; } 50%{ opacity:0.5; }
+    }
+
+    .start-btn {
+      font-family:'Orbitron',sans-serif;
+      font-size:16px;
+      font-weight:700;
+      letter-spacing:4px;
+      padding:14px 48px;
+      background:transparent;
+      border:2px solid green;
+      /* color:var(--col-glow); cursor:pointer; */
+      position:relative;
+      overflow:hidden;
+      transition:color .2s;
+    }
+    .start-btn::before {
+      content:''; position:absolute; inset:0;
+      background:var(--col-glow); transform:scaleX(0);
+      transform-origin:left; transition:transform .25s;
+    }
+    .start-btn:hover::before { transform:scaleX(1); }
+    .start-btn:hover { color:var(--col-bg); }
+    .start-btn span { position:relative; z-index:1; }
+
 
       #board {
         width: 1800px;
@@ -177,6 +258,19 @@
     </style>
   </head>
   <body>
+    <div id="startScreen">
+      <div class="start-title">Abduction RESCUE<br>OPERATION han</div>
+      <div class="start-sub">
+        Three days ago, Han disappeared. No note. No trace.<br>
+        Just an ever emitting green light in the sky.<br>
+        You've tracked the signal and youve forced your way into their mothership.<br>
+        However, you did it last second and they just took off theres no going back you have to save her<br>
+        Theres Four sectors. Four keycards. One chance. Or else they use her to destroy the world
+      </div>
+      <div class="syringe-warning">time is limited</div>
+      <button class="start-btn" id="startBtn"><span>Start</span></button>
+    </div>
+
     <div id="board">
       <div id="ui">
         <div id="inventory"></div>
@@ -214,12 +308,15 @@
     </div>
 
     <script>
+      let startScreen = document.getElementById('startScreen');
       let player = document.getElementById("player")
       let screen = document.getElementById("screen")
       let inventoryUI = document.getElementById("inventory")
       let light = document.getElementById("light")
       let on = false
       let secrets = document.querySelectorAll(".secret")
+      document.getElementById("startBtn").addEventListener("click", startGame);
+
 
       let x = 100
       let y = 100
@@ -227,6 +324,9 @@
       let inventory = {}
       let slotss = {}
       let order = []
+      let count = 0
+      let syringeInterval = null
+      let gameRunning = false
 
       let doors = [
         {dor: document.getElementById("blueDoor"), x: 2000, y: 1000, type: "blue", unlocked: false,},
@@ -339,6 +439,18 @@
         inventoryUI.appendChild(slot)
         slotss[type].push(slot)
       }
+
+      function timer() {
+        if (!gameRunning) return;
+        syringeCount++;
+        const el = document.getElementById('syr' + syringeCount);
+        if (el) el.classList.add('filled');
+        if (syringeCount >= 6) {
+          clearInterval(syringeInterval);
+        } else {
+          showToast(`⚠ SYRINGE ${syringeCount}/6 INJECTED — ${6-syringeCount} REMAINING`);
+        }
+      }
       const MapX = 6000
       const MapY = 4000
 
@@ -348,6 +460,8 @@
       const maxY = MapY - 50
 
       function move() {
+        if(!gameRunning) return;   // ← prevents running before start
+
         let speed = keys["Shift"]? 40:10
 
         let newX = x
@@ -454,27 +568,22 @@
             item.item.style.top = item.y + "px"
           }
 
-          if (!item.picked && colliding(item) && keys[" "]) {
-
-            if (item.type === "light") {
+            if (!item.picked && colliding(item) && keys[" "]) {
+              if (item.type === "light") {
                 item.picked = true
                 inventory["light"] = (inventory["light"] || 0) + 1
                 on = false
                 item.item.style.display = "none"
-            } else {
-                let count = 0
-                for (let k in Object.keys(inventory)) {
-                    if (k !== "light") count++
+              } else {
+                let count = order.filter(t => t !== "light").length
+                if (count < 4) {
+                  item.picked = true
+                  adinventory(item.type)
+                  item.item.style.display = "none"
                 }
-                
-                if (count <= 4) {
-                    item.picked = true 
-                    adinventory(item.type)
-                    item.item.style.display = "none"
-                }
-            } 
-          }
-        })
+              }
+            }
+          })
 
         doors.forEach((dor) => {
           dor.dor.style.left = dor.x + "px"
@@ -503,6 +612,20 @@
 
         requestAnimationFrame(move)
       }
+      // function startSyringeTimer() {
+      //   syringeInterval = setInterval(() => {
+      //     if (!gameRunning || popupOpen) return;
+      //     syringeCount++;
+      //     const el = document.getElementById('syr' + syringeCount);
+      //     if (el) el.classList.add('filled');
+      //     if (syringeCount >= 6) {
+      //       clearInterval(syringeInterval);
+      //       triggerEnd('bad');
+      //     } else {
+      //       showToast(`⚠ SYRINGE ${syringeCount}/6 INJECTED — ${6-syringeCount} REMAINING`);
+      //     }
+      //   }, 90000); // every 90 seconds
+      // }
 
       //stuff for cordinates by chatgpt
       (() => {
@@ -567,6 +690,12 @@
       })();
 
       move()
+      function startGame(){
+        startScreen.classList.add('hidden')
+        gameRunning = true
+        requestAnimationFrame(move)
+      }
+
     </script>
   </body>
 </html>
