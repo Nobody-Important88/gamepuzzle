@@ -87,7 +87,7 @@
       0%,100%{ opacity:1; } 50%{ opacity:0.5; }
     }
 
-    .start-btn {
+    .start {
       font-family:'Orbitron',sans-serif;
       font-size:16px;
       font-weight:700;
@@ -99,15 +99,19 @@
       position:relative;
       overflow:hidden;
       transition:color .2s;
+      color: white;
     }
-    .start-btn::before {
-      content:''; position:absolute; inset:0;
-      background:var(--col-glow); transform:scaleX(0);
-      transform-origin:left; transition:transform .25s;
+    .start::before {
+      position:absolute;
+      inset:0;
+      background:var(black);
+      transform:scaleX(0);
+      transform-origin:left;
+      transition:transform .25s;
     }
-    .start-btn:hover::before { transform:scaleX(1); }
-    .start-btn:hover { color:var(--col-bg); }
-    .start-btn span { position:relative; z-index:1; }
+    .start:hover::before { transform:scaleX(1); }
+    .start:hover { color:var(green) }
+    .start span { position:relative; z-index:1; }
 
 
       #board {
@@ -267,8 +271,8 @@
         However, you did it last second and they just took off theres no going back you have to save her<br>
         Theres Four sectors. Four keycards. One chance. Or else they use her to destroy the world
       </div>
-      <div class="syringe-warning">time is limited</div>
-      <button class="start-btn" id="startBtn"><span>Start</span></button>
+      <div class="syringe-warning">You Have 15 Minutes, Make them count</div>
+      <button class="start" id="startBtn"><span>Start</span></button>
     </div>
 
     <div id="board">
@@ -326,7 +330,7 @@
       let order = []
       let count = 0
       let syringeInterval = null
-      let gameRunning = false
+      let running = false
 
       let doors = [
         {dor: document.getElementById("blueDoor"), x: 2000, y: 1000, type: "blue", unlocked: false,},
@@ -441,7 +445,7 @@
       }
 
       function timer() {
-        if (!gameRunning) return;
+        if (!running) return;
         syringeCount++;
         const el = document.getElementById('syr' + syringeCount);
         if (el) el.classList.add('filled');
@@ -460,7 +464,7 @@
       const maxY = MapY - 50
 
       function move() {
-        if(!gameRunning) return;   // ← prevents running before start
+        if(!running) return
 
         let speed = keys["Shift"]? 40:10
 
@@ -614,7 +618,7 @@
       }
       // function startSyringeTimer() {
       //   syringeInterval = setInterval(() => {
-      //     if (!gameRunning || popupOpen) return;
+      //     if (!running || popupOpen) return;
       //     syringeCount++;
       //     const el = document.getElementById('syr' + syringeCount);
       //     if (el) el.classList.add('filled');
@@ -692,7 +696,7 @@
       move()
       function startGame(){
         startScreen.classList.add('hidden')
-        gameRunning = true
+        running = true
         requestAnimationFrame(move)
       }
 
