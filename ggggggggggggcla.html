@@ -1,0 +1,1133 @@
+
+ <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALIEN RESCUE — Mothership</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --col-red:    #ff4444;
+      --col-blue:   #44ccff;
+      --col-yellow: #ffee44;
+      --col-green:  #44ff88;
+      --col-purple: #cc44ff;
+      --col-bg:     #03080f;
+      --col-panel:  rgba(0,255,180,0.06);
+      --col-border: rgba(0,255,180,0.18);
+      --col-glow:   #00ffb2;
+      --col-warn:   #ff6622;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      width:100vw; height:100vh; overflow:hidden;
+      background: var(--col-bg);
+      display:flex; align-items:center; justify-content:center;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--col-glow);
+    }
+
+    /* ── SCANLINES overlay ── */
+    body::before {
+      content:''; pointer-events:none;
+      position:fixed; inset:0; z-index:9999;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px
+      );
+    }
+
+    /* ══════════ START SCREEN ══════════ */
+    #startScreen {
+      position:fixed; inset:0; z-index:500;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background: radial-gradient(ellipse at 50% 30%, #001a0e 0%, #03080f 70%);
+      gap:28px;
+    }
+    #startScreen.hidden { display:none; }
+
+    .start-ship {
+      font-size:90px; line-height:1;
+      filter: drop-shadow(0 0 24px var(--col-glow));
+      animation: shipFloat 3s ease-in-out infinite;
+    }
+    @keyframes shipFloat {
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-14px); }
+    }
+
+    .start-title {
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(28px,4vw,52px);
+      font-weight:900; letter-spacing:6px; text-align:center;
+      color:#fff;
+      text-shadow: 0 0 30px var(--col-glow), 0 0 60px var(--col-glow);
+      animation: titlePulse 2.4s ease-in-out infinite;
+    }
+    @keyframes titlePulse {
+      0%,100%{ text-shadow:0 0 30px var(--col-glow),0 0 60px var(--col-glow); }
+      50%{ text-shadow:0 0 10px var(--col-glow),0 0 20px var(--col-glow); }
+    }
+
+    .start-sub {
+      font-size:14px; letter-spacing:3px; color:rgba(0,255,178,0.55);
+      text-align:center; max-width:560px; line-height:1.7;
+    }
+
+    .syringe-warning {
+      display:flex; gap:10px; align-items:center;
+      background:rgba(255,68,68,0.12); border:1px solid rgba(255,68,68,0.4);
+      padding:10px 22px; border-radius:4px;
+      color:var(--col-red); font-size:13px; letter-spacing:2px;
+      animation: warnFlash 1.6s ease-in-out infinite;
+    }
+    @keyframes warnFlash {
+      0%,100%{ opacity:1; } 50%{ opacity:0.5; }
+    }
+
+    .start-btn {
+      font-family:'Orbitron',sans-serif; font-size:16px; font-weight:700;
+      letter-spacing:4px; padding:14px 48px;
+      background:transparent;
+      border:2px solid var(--col-glow);
+      color:var(--col-glow); cursor:pointer;
+      position:relative; overflow:hidden;
+      transition:color .2s;
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+    }
+    .start-btn::before {
+      content:''; position:absolute; inset:0;
+      background:var(--col-glow); transform:scaleX(0);
+      transform-origin:left; transition:transform .25s;
+    }
+    .start-btn:hover::before { transform:scaleX(1); }
+    .start-btn:hover { color:var(--col-bg); }
+    .start-btn span { position:relative; z-index:1; }
+
+    /* ══════════ GAME WRAPPER ══════════ */
+    #gameWrap {
+      width:1800px; height:940px;
+      position:relative; overflow:hidden;
+      border:1px solid var(--col-border);
+      box-shadow: 0 0 60px rgba(0,255,178,0.08), inset 0 0 80px rgba(0,0,0,0.6);
+    }
+    #gameWrap.hidden { display:none; }
+
+    /* ══════════ HUD ══════════ */
+    #hud {
+      position:absolute; top:0; left:0; right:0;
+      height:54px; z-index:50;
+      background: linear-gradient(to bottom, rgba(0,10,6,0.95), rgba(0,10,6,0));
+      display:flex; align-items:center; padding:0 18px; gap:24px;
+      border-bottom:1px solid var(--col-border);
+      pointer-events:none;
+    }
+    .hud-title {
+      font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700;
+      letter-spacing:4px; color:var(--col-glow);
+      text-shadow:0 0 10px var(--col-glow);
+    }
+    .hud-sep { width:1px; height:28px; background:var(--col-border); }
+
+    /* Syringe counter */
+    #syringeBar {
+      display:flex; gap:6px; align-items:center;
+    }
+    .syringe-lbl { font-size:11px; letter-spacing:2px; color:rgba(255,68,68,0.7); margin-right:4px; }
+    .syr {
+      width:18px; height:34px;
+      border:2px solid rgba(255,68,68,0.35);
+      border-radius:3px; position:relative; overflow:hidden;
+      transition:border-color .3s;
+    }
+    .syr.filled { border-color:var(--col-red); }
+    .syr.filled::after {
+      content:''; position:absolute; inset:2px;
+      background:var(--col-red);
+      box-shadow:0 0 8px var(--col-red);
+    }
+
+    /* Keycards */
+    #keycardBar { display:flex; gap:8px; align-items:center; }
+    .kc-lbl { font-size:11px; letter-spacing:2px; color:rgba(0,255,178,0.5); margin-right:4px; }
+    .kc-slot {
+      width:32px; height:22px;
+      border:2px solid rgba(255,255,255,0.15); border-radius:3px;
+      position:relative; font-size:8px; letter-spacing:1px;
+      display:flex; align-items:center; justify-content:center;
+      color:rgba(255,255,255,0.2); transition:all .3s;
+    }
+    .kc-slot.held { color:#fff; }
+    .kc-slot[data-color="red"]    { border-color:rgba(255,68,68,0.5); }
+    .kc-slot[data-color="blue"]   { border-color:rgba(68,204,255,0.5); }
+    .kc-slot[data-color="yellow"] { border-color:rgba(255,238,68,0.5); }
+    .kc-slot[data-color="green"]  { border-color:rgba(68,255,136,0.5); }
+    .kc-slot.held[data-color="red"]    { background:rgba(255,68,68,0.25); border-color:var(--col-red); color:var(--col-red); box-shadow:0 0 10px rgba(255,68,68,0.4); }
+    .kc-slot.held[data-color="blue"]   { background:rgba(68,204,255,0.25); border-color:var(--col-blue); color:var(--col-blue); box-shadow:0 0 10px rgba(68,204,255,0.4); }
+    .kc-slot.held[data-color="yellow"] { background:rgba(255,238,68,0.25); border-color:var(--col-yellow); color:var(--col-yellow); box-shadow:0 0 10px rgba(255,238,68,0.4); }
+    .kc-slot.held[data-color="green"]  { background:rgba(68,255,136,0.25); border-color:var(--col-green); color:var(--col-green); box-shadow:0 0 10px rgba(68,255,136,0.4); }
+
+    /* UV light indicator */
+    #uvBtn {
+      pointer-events:all;
+      margin-left:auto;
+      font-family:'Orbitron',sans-serif; font-size:10px; letter-spacing:2px;
+      padding:5px 14px; border:1px solid rgba(204,68,255,0.4);
+      background:transparent; color:rgba(204,68,255,0.6); cursor:pointer;
+      transition:all .2s; border-radius:2px;
+    }
+    #uvBtn.on { background:rgba(204,68,255,0.2); color:var(--col-purple); border-color:var(--col-purple); box-shadow:0 0 12px rgba(204,68,255,0.4); }
+    #uvBtn:hover { border-color:var(--col-purple); }
+
+    /* Controls hint */
+    .ctrl-hint {
+      font-size:10px; letter-spacing:1px; color:rgba(0,255,178,0.3);
+      white-space:nowrap;
+    }
+
+    /* ══════════ MAP SCREEN ══════════ */
+    #screen {
+      position:absolute; inset:0;
+      /* scrolls via JS transform */
+    }
+
+    /* ── Ship floor ── */
+    #shipFloor {
+      position:absolute;
+      /* set by JS */
+      background:
+        radial-gradient(ellipse at 50% 50%, #041a10 0%, #020d08 100%);
+    }
+
+    /* Grid lines on floor */
+    #shipFloor::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background-image:
+        linear-gradient(rgba(0,255,178,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,178,0.04) 1px, transparent 1px);
+      background-size:60px 60px;
+    }
+
+    /* ── Sector quadrants ── */
+    .sector {
+      position:absolute;
+      border:1px solid var(--col-border);
+      pointer-events:none;
+    }
+    .sector-label {
+      position:absolute; top:10px; left:14px;
+      font-family:'Orbitron',sans-serif; font-size:11px; font-weight:700;
+      letter-spacing:3px; opacity:0.35; text-transform:uppercase;
+    }
+
+    /* Center hub */
+    #hub {
+      position:absolute;
+      background:rgba(0,255,178,0.03);
+      border:2px solid rgba(0,255,178,0.25);
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none;
+    }
+    #hub::before {
+      content:'⬡'; font-size:120px; color:rgba(0,255,178,0.05);
+      position:absolute;
+    }
+    .hub-label {
+      font-family:'Orbitron',sans-serif; font-size:13px; font-weight:700;
+      letter-spacing:5px; color:rgba(0,255,178,0.3);
+      text-align:center; z-index:1;
+    }
+
+    /* ── Player ── */
+    #player {
+      position:absolute; z-index:20;
+      width:44px; height:44px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px;
+      filter: drop-shadow(0 0 8px var(--col-glow));
+      transition: filter .1s;
+    }
+    #player::after {
+      content:''; position:absolute; inset:-6px;
+      border-radius:50%; border:1px solid rgba(0,255,178,0.3);
+      animation: playerRing 2s linear infinite;
+    }
+    @keyframes playerRing {
+      0%{ transform:scale(1); opacity:.4; }
+      100%{ transform:scale(1.5); opacity:0; }
+    }
+
+    /* ── UV light halo ── */
+    #uvLight {
+      position:absolute; z-index:15; pointer-events:none;
+      width:240px; height:240px; margin:-120px 0 0 -120px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(180,0,255,0.22) 0%, rgba(140,0,255,0.08) 40%, transparent 70%);
+      display:none;
+      filter:blur(4px);
+    }
+
+    /* ── Doors ── */
+    .door {
+      position:absolute; z-index:12;
+      width:80px; height:80px;
+      border:3px solid; border-radius:4px;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:4px; cursor:default;
+      transition:all .3s;
+    }
+    .door-icon { font-size:26px; }
+    .door-label {
+      font-family:'Orbitron',sans-serif; font-size:8px; letter-spacing:2px;
+      text-align:center;
+    }
+    .door.locked { animation: doorPulse 2s ease-in-out infinite; }
+    @keyframes doorPulse {
+      0%,100%{ box-shadow:0 0 8px currentColor; }
+      50%{ box-shadow:0 0 20px currentColor; }
+    }
+    .door.unlocked { opacity:0.35; border-style:dashed; }
+
+    .door[data-color="red"]    { color:var(--col-red);    border-color:var(--col-red);    background:rgba(255,68,68,0.08); }
+    .door[data-color="blue"]   { color:var(--col-blue);   border-color:var(--col-blue);   background:rgba(68,204,255,0.08); }
+    .door[data-color="yellow"] { color:var(--col-yellow); border-color:var(--col-yellow); background:rgba(255,238,68,0.08); }
+    .door[data-color="green"]  { color:var(--col-green);  border-color:var(--col-green);  background:rgba(68,255,136,0.08); }
+
+    /* Final vault door */
+    #finalDoor {
+      position:absolute; z-index:12;
+      width:140px; height:140px;
+      border:3px solid rgba(255,255,255,0.3); border-radius:6px;
+      background:rgba(255,255,255,0.03);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:8px;
+    }
+    .vault-icon { font-size:40px; filter:grayscale(1) opacity(0.4); }
+    .vault-label { font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.3); text-align:center; }
+    #vaultSlots { display:flex; gap:6px; }
+    .vault-kc {
+      width:20px; height:14px; border-radius:2px;
+      border:1px solid rgba(255,255,255,0.15);
+      transition:all .4s;
+    }
+    .vault-kc[data-color="red"]    { border-color:rgba(255,68,68,0.4); }
+    .vault-kc[data-color="blue"]   { border-color:rgba(68,204,255,0.4); }
+    .vault-kc[data-color="yellow"] { border-color:rgba(255,238,68,0.4); }
+    .vault-kc[data-color="green"]  { border-color:rgba(68,255,136,0.4); }
+    .vault-kc.inserted[data-color="red"]    { background:var(--col-red);    box-shadow:0 0 10px var(--col-red); }
+    .vault-kc.inserted[data-color="blue"]   { background:var(--col-blue);   box-shadow:0 0 10px var(--col-blue); }
+    .vault-kc.inserted[data-color="yellow"] { background:var(--col-yellow); box-shadow:0 0 10px var(--col-yellow); }
+    .vault-kc.inserted[data-color="green"]  { background:var(--col-green);  box-shadow:0 0 10px var(--col-green); }
+
+    /* ── Keycards on floor ── */
+    .keycard {
+      position:absolute; z-index:11;
+      width:38px; height:26px; border-radius:3px;
+      border:2px solid;
+      display:flex; align-items:center; justify-content:center;
+      font-size:8px; font-family:'Orbitron',sans-serif; letter-spacing:1px;
+      cursor:default;
+      animation: cardFloat 2.5s ease-in-out infinite;
+    }
+    @keyframes cardFloat {
+      0%,100%{ transform:translateY(0) rotate(-2deg); }
+      50%{ transform:translateY(-6px) rotate(2deg); }
+    }
+    .keycard[data-color="red"]    { color:var(--col-red);    border-color:var(--col-red);    background:rgba(255,68,68,0.15);    box-shadow:0 0 12px rgba(255,68,68,0.4); }
+    .keycard[data-color="blue"]   { color:var(--col-blue);   border-color:var(--col-blue);   background:rgba(68,204,255,0.15);   box-shadow:0 0 12px rgba(68,204,255,0.4); }
+    .keycard[data-color="yellow"] { color:var(--col-yellow); border-color:var(--col-yellow); background:rgba(255,238,68,0.15);   box-shadow:0 0 12px rgba(255,238,68,0.4); }
+    .keycard[data-color="green"]  { color:var(--col-green);  border-color:var(--col-green);  background:rgba(68,255,136,0.15);   box-shadow:0 0 12px rgba(68,255,136,0.4); }
+
+    /* UV light item on floor */
+    .floor-item {
+      position:absolute; z-index:11;
+      width:36px; height:36px; border-radius:50%;
+      border:2px solid rgba(204,68,255,0.6);
+      background:rgba(204,68,255,0.12);
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px;
+      box-shadow:0 0 14px rgba(204,68,255,0.3);
+      animation:uvPulse 2s ease-in-out infinite;
+    }
+    @keyframes uvPulse {
+      0%,100%{ box-shadow:0 0 14px rgba(204,68,255,0.3); }
+      50%{ box-shadow:0 0 28px rgba(204,68,255,0.6); }
+    }
+
+    /* ── Secret texts (UV reveal) ── */
+    .secret {
+      position:absolute; z-index:13; pointer-events:none;
+      font-size:14px; letter-spacing:2px;
+      color:transparent; text-shadow:none;
+      transition:color .3s, text-shadow .3s;
+      white-space:nowrap;
+      font-family:'Orbitron',sans-serif;
+    }
+    .secret.revealed {
+      color:rgba(255,160,255,0.9);
+      text-shadow:0 0 12px rgba(200,0,255,0.8);
+    }
+
+    /* ── Walls ── */
+    .wall {
+      position:absolute; z-index:10;
+      background: linear-gradient(135deg, #091a10 0%, #050f08 100%);
+      border:1px solid rgba(0,255,178,0.15);
+      box-shadow:inset 0 0 20px rgba(0,0,0,0.6);
+    }
+
+    /* ── Puzzle terminals ── */
+    .terminal {
+      position:absolute; z-index:11;
+      width:54px; height:54px; border-radius:4px;
+      border:2px solid rgba(0,255,178,0.3);
+      background:rgba(0,255,178,0.06);
+      display:flex; align-items:center; justify-content:center;
+      font-size:24px;
+      animation:termBlink 3s ease-in-out infinite;
+    }
+    @keyframes termBlink {
+      0%,90%,100%{ opacity:1; }
+      95%{ opacity:0.5; }
+    }
+
+    /* ── Toast notification ── */
+    #toast {
+      position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+      z-index:200; pointer-events:none;
+      font-family:'Orbitron',sans-serif; font-size:12px; letter-spacing:3px;
+      padding:10px 28px; border-radius:3px;
+      background:rgba(0,10,6,0.95);
+      border:1px solid var(--col-glow);
+      color:var(--col-glow);
+      box-shadow:0 0 20px rgba(0,255,178,0.25);
+      opacity:0; transition:opacity .3s;
+    }
+    #toast.show { opacity:1; }
+
+    /* ── Mini-map ── */
+    #minimap {
+      position:absolute; bottom:14px; right:14px; z-index:50;
+      width:180px; height:120px;
+      background:rgba(0,10,6,0.88);
+      border:1px solid rgba(0,255,178,0.2);
+      border-radius:4px; overflow:hidden;
+    }
+    #minimapCanvas { width:100%; height:100%; }
+
+    /* ══════════ POPUP OVERLAY ══════════ */
+    #popup {
+      position:fixed; inset:0; z-index:300;
+      background:rgba(0,6,3,0.88);
+      display:flex; align-items:center; justify-content:center;
+    }
+    #popup.hidden { display:none; }
+    .popup-box {
+      width:460px; padding:32px;
+      background:rgba(4,20,12,0.98);
+      border:1px solid var(--col-border);
+      box-shadow:0 0 60px rgba(0,255,178,0.1);
+      display:flex; flex-direction:column; gap:18px;
+    }
+    .popup-title {
+      font-family:'Orbitron',sans-serif; font-size:18px; font-weight:700;
+      letter-spacing:4px; color:var(--col-glow);
+      text-shadow:0 0 16px var(--col-glow);
+    }
+    .popup-body { font-size:13px; line-height:1.8; color:rgba(0,255,178,0.7); }
+    .popup-close {
+      font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:3px;
+      padding:10px 24px; border:1px solid var(--col-glow);
+      background:transparent; color:var(--col-glow); cursor:pointer;
+      align-self:flex-end; transition:all .2s;
+    }
+    .popup-close:hover { background:var(--col-glow); color:var(--col-bg); }
+
+    /* ══════════ END SCREEN ══════════ */
+    #endScreen {
+      position:fixed; inset:0; z-index:600;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:22px;
+      background:rgba(0,6,3,0.97);
+    }
+    #endScreen.hidden { display:none; }
+    .end-emoji { font-size:80px; animation:shipFloat 3s ease-in-out infinite; }
+    .end-title {
+      font-family:'Orbitron',sans-serif; font-size:clamp(22px,3vw,40px);
+      font-weight:900; letter-spacing:6px; color:#fff; text-align:center;
+    }
+    .end-sub { font-size:13px; letter-spacing:2px; color:rgba(0,255,178,0.5); text-align:center; max-width:500px; line-height:1.8; }
+    .end-btn {
+      font-family:'Orbitron',sans-serif; font-size:13px; letter-spacing:4px;
+      padding:12px 36px; border:1px solid var(--col-glow);
+      background:transparent; color:var(--col-glow); cursor:pointer;
+      transition:all .2s;
+    }
+    .end-btn:hover { background:var(--col-glow); color:var(--col-bg); }
+
+  </style>
+</head>
+<body>
+
+<!-- ══════════ START SCREEN ══════════ -->
+<div id="startScreen">
+  <div class="start-ship">🛸</div>
+  <div class="start-title">ALIEN RESCUE<br>OPERATION SARAH</div>
+  <div class="start-sub">
+    Three days ago, Sarah disappeared. No note. No trace.<br>
+    Just a crop circle and a green light in the sky.<br>
+    You've tracked the signal to their mothership.<br>
+    Four sectors. Four keycards. One chance.
+  </div>
+  <div class="syringe-warning">⚠ ALERT — 6 SYRINGES ACTIVE — TIME IS CRITICAL</div>
+  <button class="start-btn" id="startBtn"><span>BEGIN MISSION</span></button>
+  <div class="ctrl-hint">WASD / ARROWS — MOVE &nbsp;|&nbsp; SPACE — INTERACT &nbsp;|&nbsp; X — UV LIGHT &nbsp;|&nbsp; SHIFT — SPRINT</div>
+</div>
+
+<!-- ══════════ GAME ══════════ -->
+<div id="gameWrap" class="hidden">
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-title">MOTHERSHIP ⬡</div>
+    <div class="hud-sep"></div>
+
+    <div id="syringeBar">
+      <span class="syringe-lbl">💉 SERUM</span>
+      <div class="syr" id="syr1"></div>
+      <div class="syr" id="syr2"></div>
+      <div class="syr" id="syr3"></div>
+      <div class="syr" id="syr4"></div>
+      <div class="syr" id="syr5"></div>
+      <div class="syr" id="syr6"></div>
+    </div>
+
+    <div class="hud-sep"></div>
+
+    <div id="keycardBar">
+      <span class="kc-lbl">🔑 KEYCARDS</span>
+      <div class="kc-slot" data-color="red"   id="kc-red">RED</div>
+      <div class="kc-slot" data-color="blue"  id="kc-blue">BLU</div>
+      <div class="kc-slot" data-color="yellow"id="kc-yellow">YLW</div>
+      <div class="kc-slot" data-color="green" id="kc-green">GRN</div>
+    </div>
+
+    <button id="uvBtn">[ UV LIGHT: OFF ]</button>
+    <div class="ctrl-hint">SPACE=INTERACT &nbsp; X=UV &nbsp; SHIFT=RUN</div>
+  </div>
+
+  <!-- Game screen (scrolls) -->
+  <div id="screen">
+    <div id="shipFloor">
+
+      <!-- Sector backgrounds -->
+      <div class="sector" id="sec1"><div class="sector-label" style="color:var(--col-red)">SECTOR 1 — LABYRINTH</div></div>
+      <div class="sector" id="sec2"><div class="sector-label" style="color:var(--col-blue)">SECTOR 2 — ENGINE ROOM</div></div>
+      <div class="sector" id="sec3"><div class="sector-label" style="color:var(--col-yellow)">SECTOR 3 — DATA CORE</div></div>
+      <div class="sector" id="sec4"><div class="sector-label" style="color:var(--col-green)">SECTOR 4 — SPECIMEN WING</div></div>
+
+      <!-- Center Hub -->
+      <div id="hub"><div class="hub-label">CENTER<br>HUB</div></div>
+
+      <!-- Final vault door -->
+      <div id="finalDoor">
+        <div class="vault-icon">🔒</div>
+        <div class="vault-label">FINAL VAULT</div>
+        <div id="vaultSlots">
+          <div class="vault-kc" data-color="red"></div>
+          <div class="vault-kc" data-color="blue"></div>
+          <div class="vault-kc" data-color="yellow"></div>
+          <div class="vault-kc" data-color="green"></div>
+        </div>
+      </div>
+
+      <!-- Sector doors -->
+      <div class="door locked" data-color="red"    id="door-red">
+        <div class="door-icon">🚪</div><div class="door-label">SEC 1<br>RED</div>
+      </div>
+      <div class="door locked" data-color="blue"   id="door-blue">
+        <div class="door-icon">🚪</div><div class="door-label">SEC 2<br>BLUE</div>
+      </div>
+      <div class="door locked" data-color="yellow" id="door-yellow">
+        <div class="door-icon">🚪</div><div class="door-label">SEC 3<br>YLW</div>
+      </div>
+      <div class="door locked" data-color="green"  id="door-green">
+        <div class="door-icon">🚪</div><div class="door-label">SEC 4<br>GRN</div>
+      </div>
+
+      <!-- Keycards on floor -->
+      <div class="keycard" data-color="red"    id="card-red">RED</div>
+      <div class="keycard" data-color="blue"   id="card-blue">BLU</div>
+      <div class="keycard" data-color="yellow" id="card-yellow">YLW</div>
+      <div class="keycard" data-color="green"  id="card-green">GRN</div>
+
+      <!-- UV flashlight item -->
+      <div class="floor-item" id="uvItem">🔦</div>
+
+      <!-- Puzzle terminals -->
+      <div class="terminal" id="term1" title="Cipher Terminal">💻</div>
+      <div class="terminal" id="term2" title="Lever Puzzle">🔧</div>
+      <div class="terminal" id="term3" title="Button Relay">⚡</div>
+      <div class="terminal" id="term4" title="Wire Puzzle">🔌</div>
+      <div class="terminal" id="term5" title="Data Grid">🧩</div>
+      <div class="terminal" id="term6" title="Memory Sequence">📡</div>
+      <div class="terminal" id="term7" title="Shadow Match">🔮</div>
+      <div class="terminal" id="term8" title="Combo Lock">🔢</div>
+
+      <!-- Secret UV texts -->
+      <div class="secret" id="sec-msg1">◈ CIPHER KEY: SHIFT +3 ◈</div>
+      <div class="secret" id="sec-msg2">THEY WERE HERE BEFORE US</div>
+      <div class="secret" id="sec-msg3">LEVER ORDER: 2 4 1 6 3 5</div>
+      <div class="secret" id="sec-msg4">SHE IS STILL HUMAN — HURRY</div>
+
+      <!-- Walls (set by JS) -->
+
+      <!-- Player -->
+      <div id="player">🧑‍🚀</div>
+      <div id="uvLight"></div>
+
+    </div><!-- /shipFloor -->
+  </div><!-- /screen -->
+
+  <!-- Mini-map -->
+  <div id="minimap">
+    <canvas id="minimapCanvas" width="180" height="120"></canvas>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+</div>
+
+<!-- ══════════ POPUP ══════════ -->
+<div id="popup" class="hidden">
+  <div class="popup-box">
+    <div class="popup-title" id="popupTitle">TERMINAL</div>
+    <div class="popup-body" id="popupBody"></div>
+    <button class="popup-close" id="popupClose">[ CLOSE ]</button>
+  </div>
+</div>
+
+<!-- ══════════ END SCREEN ══════════ -->
+<div id="endScreen" class="hidden">
+  <div class="end-emoji" id="endEmoji">🧑‍🚀</div>
+  <div class="end-title" id="endTitle">MISSION COMPLETE</div>
+  <div class="end-sub" id="endSub">You reached Sarah in time. She's safe.</div>
+  <button class="end-btn" id="restartBtn">[ PLAY AGAIN ]</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  MAP CONSTANTS
+// ═══════════════════════════════════════════════
+const MAP_W = 4200, MAP_H = 3000;
+const HUB_X = 1600, HUB_Y = 1100, HUB_W = 1000, HUB_H = 800;
+const PLAYER_W = 44, PLAYER_H = 44;
+const SPEED_NORMAL = 8, SPEED_SPRINT = 20;
+
+// Sector bounding boxes (x, y, w, h)
+const SECTORS = {
+  red:    { x:0,       y:0,       w:1600,  h:1100 },
+  blue:   { x:2600,    y:0,       w:1600,  h:1100 },
+  yellow: { x:0,       y:1900,    w:1600,  h:1100 },
+  green:  { x:2600,    y:1900,    w:1600,  h:1100 },
+};
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let px = HUB_X + HUB_W/2 - PLAYER_W/2;
+let py = HUB_Y + HUB_H/2 - PLAYER_H/2;
+let keysDown = {};
+let uvOn = false;
+let uvHasItem = false;
+let inventory = {}; // color -> true
+let doorsUnlocked = { red:false, blue:false, yellow:false, green:false };
+let vaultUnlocked = false;
+let syringeCount = 0;
+let syringeInterval = null;
+let gameRunning = false;
+
+// ═══════════════════════════════════════════════
+//  ELEMENT REFS
+// ═══════════════════════════════════════════════
+const startScreen = document.getElementById('startScreen');
+const gameWrap    = document.getElementById('gameWrap');
+const screen      = document.getElementById('screen');
+const shipFloor   = document.getElementById('shipFloor');
+const playerEl    = document.getElementById('player');
+const uvLight     = document.getElementById('uvLight');
+const uvBtn       = document.getElementById('uvBtn');
+const toastEl     = document.getElementById('toast');
+const popup       = document.getElementById('popup');
+const popupTitle  = document.getElementById('popupTitle');
+const popupBody   = document.getElementById('popupBody');
+const popupClose  = document.getElementById('popupClose');
+const endScreen   = document.getElementById('endScreen');
+const mmCanvas    = document.getElementById('minimapCanvas');
+const mmCtx       = mmCanvas.getContext('2d');
+
+// ═══════════════════════════════════════════════
+//  LAYOUT & ELEMENT PLACEMENT
+// ═══════════════════════════════════════════════
+function setupLayout() {
+  shipFloor.style.width  = MAP_W + 'px';
+  shipFloor.style.height = MAP_H + 'px';
+  screen.style.width  = MAP_W + 'px';
+  screen.style.height = MAP_H + 'px';
+
+  // Sectors
+  Object.entries(SECTORS).forEach(([color, s]) => {
+    const el = document.getElementById('sec' + ({red:'1',blue:'2',yellow:'3',green:'4'}[color]));
+    el.style.left=s.x+'px'; el.style.top=s.y+'px';
+    el.style.width=s.w+'px'; el.style.height=s.h+'px';
+  });
+
+  // Hub
+  const hub = document.getElementById('hub');
+  hub.style.left=HUB_X+'px'; hub.style.top=HUB_Y+'px';
+  hub.style.width=HUB_W+'px'; hub.style.height=HUB_H+'px';
+
+  // Final vault door — top center of hub
+  const fd = document.getElementById('finalDoor');
+  fd.style.left = (HUB_X + HUB_W/2 - 70)+'px';
+  fd.style.top  = (HUB_Y - 70)+'px';
+
+  // Sector doors — placed at hub entry points
+  place('door-red',    HUB_X - 90,            HUB_Y + HUB_H/2 - 40);
+  place('door-blue',   HUB_X + HUB_W + 10,    HUB_Y + HUB_H/2 - 40);
+  place('door-yellow', HUB_X + HUB_W/2 - 40,  HUB_Y + HUB_H + 10);
+  place('door-green',  HUB_X + HUB_W/2 - 40,  HUB_Y - 90);
+
+  // Keycards — deep inside each sector
+  place('card-red',    300,  400);
+  place('card-blue',   3600, 400);
+  place('card-yellow', 300,  2500);
+  place('card-green',  3600, 2500);
+
+  // UV flashlight — near hub entrance
+  place('uvItem', HUB_X + 120, HUB_Y + 120);
+
+  // Puzzle terminals (2 per sector)
+  place('term1', 600,  300);  // S1
+  place('term2', 900,  700);  // S1
+  place('term3', 3000, 300);  // S2
+  place('term4', 3300, 700);  // S2
+  place('term5', 600,  2200); // S3
+  place('term6', 900,  2600); // S3
+  place('term7', 3000, 2200); // S4
+  place('term8', 3300, 2600); // S4
+
+  // Secret UV messages
+  placeEl('sec-msg1', 500,  550);
+  placeEl('sec-msg2', 3200, 550);
+  placeEl('sec-msg3', 750,  800);
+  placeEl('sec-msg4', 3200, 2800);
+
+  // Walls — simple corridor walls between hub and sectors
+  const wallDefs = [
+    // Outer boundary
+    {x:0,    y:0,      w:MAP_W, h:20},
+    {x:0,    y:MAP_H-20, w:MAP_W, h:20},
+    {x:0,    y:0,      w:20,    h:MAP_H},
+    {x:MAP_W-20, y:0,  w:20,    h:MAP_H},
+    // Hub border partial walls (corridors left open)
+    {x:HUB_X, y:HUB_Y,  w:20, h: HUB_H/2 - 60},
+    {x:HUB_X, y:HUB_Y + HUB_H/2 + 60, w:20, h: HUB_H/2 - 60},
+    {x:HUB_X+HUB_W-20, y:HUB_Y, w:20, h: HUB_H/2 - 60},
+    {x:HUB_X+HUB_W-20, y:HUB_Y+HUB_H/2+60, w:20, h: HUB_H/2-60},
+    {x:HUB_X, y:HUB_Y,  w: HUB_W/2-80, h:20},
+    {x:HUB_X+HUB_W/2+80, y:HUB_Y, w: HUB_W/2-80, h:20},
+    {x:HUB_X, y:HUB_Y+HUB_H-20, w: HUB_W/2-80, h:20},
+    {x:HUB_X+HUB_W/2+80, y:HUB_Y+HUB_H-20, w: HUB_W/2-80, h:20},
+    // Some internal maze walls in Sector 1
+    {x:200,  y:200, w:500, h:20},
+    {x:200,  y:200, w:20,  h:400},
+    {x:700,  y:400, w:20,  h:300},
+    {x:400,  y:600, w:300, h:20},
+    {x:900,  y:150, w:20,  h:500},
+    // Sector 2 obstacles
+    {x:2800, y:200, w:20,  h:500},
+    {x:3000, y:550, w:400, h:20},
+    {x:3500, y:200, w:20,  h:400},
+    // Sector 3 obstacles
+    {x:200,  y:2100, w:400, h:20},
+    {x:600,  y:2100, w:20,  h:400},
+    {x:900,  y:2350, w:500, h:20},
+    // Sector 4 obstacles
+    {x:2800, y:2100, w:20,  h:500},
+    {x:3000, y:2300, w:400, h:20},
+    {x:3500, y:2100, w:20,  h:300},
+  ];
+
+  wallDefs.forEach(wd => {
+    const el = document.createElement('div');
+    el.className = 'wall';
+    el.style.left=wd.x+'px'; el.style.top=wd.y+'px';
+    el.style.width=wd.w+'px'; el.style.height=wd.h+'px';
+    shipFloor.appendChild(el);
+    walls.push({el, ...wd});
+  });
+}
+
+function place(id, x, y) {
+  const el = document.getElementById(id);
+  el.style.left=x+'px'; el.style.top=y+'px';
+}
+function placeEl(id, x, y) {
+  const el = document.getElementById(id);
+  el.style.left=x+'px'; el.style.top=y+'px';
+}
+
+// ═══════════════════════════════════════════════
+//  WORLD DATA
+// ═══════════════════════════════════════════════
+const walls = [];
+
+const CARDS = [
+  { id:'card-red',    color:'red',    wx:300,  wy:400,  picked:false },
+  { id:'card-blue',   color:'blue',   wx:3600, wy:400,  picked:false },
+  { id:'card-yellow', color:'yellow', wx:300,  wy:2500, picked:false },
+  { id:'card-green',  color:'green',  wx:3600, wy:2500, picked:false },
+];
+const UV_ITEM = { id:'uvItem', wx: HUB_X+120, wy: HUB_Y+120, picked:false };
+
+const DOORS_DATA = [
+  { id:'door-red',    color:'red',    wx: HUB_X-90,         wy: HUB_Y+HUB_H/2-40 },
+  { id:'door-blue',   color:'blue',   wx: HUB_X+HUB_W+10,   wy: HUB_Y+HUB_H/2-40 },
+  { id:'door-yellow', color:'yellow', wx: HUB_X+HUB_W/2-40, wy: HUB_Y+HUB_H+10   },
+  { id:'door-green',  color:'green',  wx: HUB_X+HUB_W/2-40, wy: HUB_Y-90          },
+];
+
+const FINAL_VAULT = { wx: HUB_X+HUB_W/2-70, wy: HUB_Y-70, w:140, h:140 };
+
+const TERMINALS = [
+  { id:'term1', wx:600,  wy:300,  sector:'red',    name:'CAESAR CIPHER TERMINAL',       desc:'A cracked screen displays fragmented alien text.<br><br><span style="color:var(--col-red)">Find all UV cipher fragments in this sector to decode the sequence.<br>Hint: look for glowing marks on the maze walls.</span>' },
+  { id:'term2', wx:900,  wy:700,  sector:'red',    name:'LEVER CONTROL PANEL',           desc:'Six levers labeled with alien symbols.<br><br><span style="color:var(--col-red)">Use the UV light to find the correct pull order scratched into the floor.</span>' },
+  { id:'term3', wx:3000, wy:300,  sector:'blue',   name:'RELAY BUTTON — SIDE A',         desc:'A massive button that activates the door on the other side.<br><br><span style="color:var(--col-blue)">Find something heavy to hold it down while you sprint through the timed corridor.</span>' },
+  { id:'term4', wx:3300, wy:700,  sector:'blue',   name:'POWER ROUTING PANEL',           desc:'Route the electrical current from source to destination.<br><br><span style="color:var(--col-blue)">Rotate the tiles to redirect the power. Burnt scorch marks on the floor (UV) show the correct path.</span>' },
+  { id:'term5', wx:600,  wy:2200, sector:'yellow', name:'DATA NODE GRID — 4×4 HACK',    desc:'Break into the alien data core by solving the 4×4 logic grid.<br><br><span style="color:var(--col-yellow)">Clue tablets are scattered around this sector. Each tablet shows a piece of the solution.</span>' },
+  { id:'term6', wx:900,  wy:2600, sector:'yellow', name:'ALIEN MEMORY SEQUENCER',        desc:'The panel flashes alien symbols in a sequence — repeat it correctly.<br><br><span style="color:var(--col-yellow)">Study the symbol murals on the walls before starting. Wrong inputs trigger a clue elsewhere.</span>' },
+  { id:'term7', wx:3000, wy:2200, sector:'green',  name:'SHADOW SILHOUETTE MATCHER',    desc:'Match the shadows cast by alien objects to the outlines on the wall.<br><br><span style="color:var(--col-green)">Rotate objects on the light platform. The correct four matches reveal a 3-digit code.</span>' },
+  { id:'term8', wx:3300, wy:2600, sector:'green',  name:'SPECIMEN JAR COMBO LOCK',       desc:'A sealed door with a 4-digit alien numeral combination.<br><br><span style="color:var(--col-green)">The first 3 digits come from the shadow puzzle. The 4th digit glows inside a specimen jar under UV light.</span>' },
+];
+
+const SECRETS = [
+  { id:'sec-msg1', wx:500,  wy:550 },
+  { id:'sec-msg2', wx:3200, wy:550 },
+  { id:'sec-msg3', wx:750,  wy:800 },
+  { id:'sec-msg4', wx:3200, wy:2800 },
+];
+
+// ═══════════════════════════════════════════════
+//  COLLISION
+// ═══════════════════════════════════════════════
+function hitWall(nx, ny) {
+  for (const w of walls) {
+    if (nx < w.x+w.w && nx+PLAYER_W > w.x && ny < w.y+w.h && ny+PLAYER_H > w.y) return true;
+  }
+  return false;
+}
+function hitDoor(nx, ny) {
+  for (const d of DOORS_DATA) {
+    if (doorsUnlocked[d.color]) continue;
+    if (nx < d.wx+80 && nx+PLAYER_W > d.wx && ny < d.wy+80 && ny+PLAYER_H > d.wy) return true;
+  }
+  if (!vaultUnlocked) {
+    const v = FINAL_VAULT;
+    if (nx < v.wx+v.w && nx+PLAYER_W > v.wx && ny < v.wy+v.h && ny+PLAYER_H > v.wy) return true;
+  }
+  return false;
+}
+function near(wx, wy, w2=60, h2=60) {
+  return px < wx+w2 && px+PLAYER_W > wx && py < wy+h2 && py+PLAYER_H > wy;
+}
+
+// ═══════════════════════════════════════════════
+//  CAMERA
+// ═══════════════════════════════════════════════
+function applyCamera() {
+  const bx = gameWrap.clientWidth  || 1800;
+  const by = gameWrap.clientHeight || 940;
+  const camX = Math.max(0, Math.min(px - bx/2, MAP_W - bx));
+  const camY = Math.max(0, Math.min(py - by/2, MAP_H - by));
+  screen.style.transform = `translate(${-camX}px, ${-camY}px)`;
+}
+
+// ═══════════════════════════════════════════════
+//  MINIMAP
+// ═══════════════════════════════════════════════
+function drawMinimap() {
+  const scaleX = 180/MAP_W, scaleY = 120/MAP_H;
+  mmCtx.clearRect(0,0,180,120);
+  mmCtx.fillStyle='rgba(0,255,178,0.04)';
+  mmCtx.fillRect(0,0,180,120);
+
+  // Sectors
+  const sColors = {red:'rgba(255,68,68,0.25)',blue:'rgba(68,204,255,0.25)',yellow:'rgba(255,238,68,0.25)',green:'rgba(68,255,136,0.25)'};
+  Object.entries(SECTORS).forEach(([c,s]) => {
+    mmCtx.fillStyle = sColors[c];
+    mmCtx.fillRect(s.x*scaleX, s.y*scaleY, s.w*scaleX, s.h*scaleY);
+  });
+  // Hub
+  mmCtx.fillStyle='rgba(0,255,178,0.12)';
+  mmCtx.fillRect(HUB_X*scaleX, HUB_Y*scaleY, HUB_W*scaleX, HUB_H*scaleY);
+  // Player
+  mmCtx.fillStyle='#00ffb2';
+  mmCtx.beginPath();
+  mmCtx.arc(px*scaleX+2, py*scaleY+2, 3, 0, Math.PI*2);
+  mmCtx.fill();
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+}
+
+// ═══════════════════════════════════════════════
+//  POPUP
+// ═══════════════════════════════════════════════
+let popupOpen = false;
+function openPopup(title, body) {
+  popupTitle.textContent = title;
+  popupBody.innerHTML = body;
+  popup.classList.remove('hidden');
+  popupOpen = true;
+}
+popupClose.onclick = () => { popup.classList.add('hidden'); popupOpen = false; };
+
+// ═══════════════════════════════════════════════
+//  SYRINGE TIMER
+// ═══════════════════════════════════════════════
+function startSyringeTimer() {
+  syringeInterval = setInterval(() => {
+    if (!gameRunning || popupOpen) return;
+    syringeCount++;
+    const el = document.getElementById('syr' + syringeCount);
+    if (el) el.classList.add('filled');
+    if (syringeCount >= 6) {
+      clearInterval(syringeInterval);
+      triggerEnd('bad');
+    } else {
+      showToast(`⚠ SYRINGE ${syringeCount}/6 INJECTED — ${6-syringeCount} REMAINING`);
+    }
+  }, 90000); // every 90 seconds
+}
+
+// ═══════════════════════════════════════════════
+//  ENDINGS
+// ═══════════════════════════════════════════════
+function triggerEnd(type) {
+  gameRunning = false;
+  clearInterval(syringeInterval);
+  const endEmoji = document.getElementById('endEmoji');
+  const endTitle = document.getElementById('endTitle');
+  const endSub   = document.getElementById('endSub');
+  if (type === 'best') {
+    endEmoji.textContent = '💑';
+    endTitle.textContent = 'SARAH IS SAFE';
+    endTitle.style.color = 'var(--col-green)';
+    endSub.textContent = 'You reached her in time. Zero syringes injected. She\'s completely fine. You both escape through the emergency bay as the ship\'s alarms wail.';
+  } else if (type === 'mid') {
+    endEmoji.textContent = '🧬';
+    endTitle.textContent = 'PARTIAL RESCUE';
+    endTitle.style.color = 'var(--col-yellow)';
+    endSub.textContent = `${syringeCount} syringe${syringeCount>1?'s':''} were injected. Sarah is alive, but something has changed in her. The transformation wasn\'t complete — but it wasn\'t zero either.`;
+  } else {
+    endEmoji.textContent = '☠️';
+    endTitle.textContent = 'TOO LATE';
+    endTitle.style.color = 'var(--col-red)';
+    endSub.textContent = 'All 6 syringes have been injected. The transformation is complete. You were too slow. Sarah is gone.';
+  }
+  endScreen.classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════
+//  INTERACTION (SPACE)
+// ═══════════════════════════════════════════════
+let interactCooldown = false;
+function interact() {
+  if (interactCooldown || popupOpen) return;
+  interactCooldown = true;
+  setTimeout(()=>interactCooldown=false, 300);
+
+  // Pick up UV light
+  if (!UV_ITEM.picked && near(UV_ITEM.wx, UV_ITEM.wy, 60, 60)) {
+    UV_ITEM.picked = true;
+    uvHasItem = true;
+    document.getElementById('uvItem').style.display='none';
+    showToast('🔦 UV FLASHLIGHT ACQUIRED — Press X to toggle');
+    return;
+  }
+
+  // Pick up keycards
+  for (const card of CARDS) {
+    if (!card.picked && near(card.wx, card.wy, 50, 36)) {
+      card.picked = true;
+      inventory[card.color] = true;
+      document.getElementById(card.id).style.display='none';
+      document.getElementById('kc-'+card.color).classList.add('held');
+      showToast(`🔑 ${card.color.toUpperCase()} KEYCARD ACQUIRED`);
+      return;
+    }
+  }
+
+  // Use keycard on sector doors
+  for (const d of DOORS_DATA) {
+    if (!doorsUnlocked[d.color] && near(d.wx, d.wy, 80, 80)) {
+      if (inventory[d.color]) {
+        doorsUnlocked[d.color] = true;
+        const doorEl = document.getElementById(d.id);
+        doorEl.classList.remove('locked');
+        doorEl.classList.add('unlocked');
+        doorEl.querySelector('.door-label').textContent = 'OPEN';
+        // Insert into vault display
+        document.querySelector(`#vaultSlots .vault-kc[data-color="${d.color}"]`).classList.add('inserted');
+        showToast(`✅ ${d.color.toUpperCase()} SECTOR UNLOCKED`);
+
+        // Check vault
+        checkVault();
+      } else {
+        showToast(`🔒 REQUIRES ${d.color.toUpperCase()} KEYCARD`);
+      }
+      return;
+    }
+  }
+
+  // Use final vault
+  if (!vaultUnlocked && near(FINAL_VAULT.wx, FINAL_VAULT.wy, 140, 140)) {
+    const all = ['red','blue','yellow','green'].every(c => doorsUnlocked[c]);
+    if (all) {
+      vaultUnlocked = true;
+      document.getElementById('finalDoor').querySelector('.vault-icon').textContent = '🚀';
+      showToast('🚀 FINAL VAULT OPEN — SARAH IS INSIDE');
+      setTimeout(()=>triggerEnd(syringeCount===0?'best':syringeCount<=3?'mid':'bad'), 1200);
+    } else {
+      showToast('🔒 ALL 4 KEYCARDS REQUIRED');
+    }
+    return;
+  }
+
+  // Interact with terminals
+  for (const t of TERMINALS) {
+    if (near(t.wx, t.wy, 54, 54)) {
+      openPopup(t.name, t.desc);
+      return;
+    }
+  }
+}
+
+function checkVault() {
+  // auto-unlock if all 4 keycards inserted
+}
+
+// ═══════════════════════════════════════════════
+//  UV SECRETS
+// ═══════════════════════════════════════════════
+function updateSecrets() {
+  SECRETS.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (!uvOn) { el.classList.remove('revealed'); return; }
+    const dist = Math.hypot(px - s.wx, py - s.wy);
+    if (dist < 200) el.classList.add('revealed');
+    else el.classList.remove('revealed');
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════
+function gameLoop() {
+  if (!gameRunning) return;
+
+  const speed = keysDown['Shift'] ? SPEED_SPRINT : SPEED_NORMAL;
+  let nx = px, ny = py;
+
+  if (keysDown['ArrowUp']    || keysDown['w'] || keysDown['W']) ny -= speed;
+  if (keysDown['ArrowDown']  || keysDown['s'] || keysDown['S']) ny += speed;
+  if (keysDown['ArrowLeft']  || keysDown['a'] || keysDown['A']) nx -= speed;
+  if (keysDown['ArrowRight'] || keysDown['d'] || keysDown['D']) nx += speed;
+
+  nx = Math.max(20, Math.min(MAP_W - PLAYER_W - 20, nx));
+  ny = Math.max(20, Math.min(MAP_H - PLAYER_H - 20, ny));
+
+  if (!hitWall(nx, py) && !hitDoor(nx, py)) px = nx;
+  if (!hitWall(px, ny) && !hitDoor(px, ny)) py = ny;
+
+  playerEl.style.left = px+'px';
+  playerEl.style.top  = py+'px';
+
+  // UV light follow player
+  if (uvOn && uvHasItem) {
+    uvLight.style.display='block';
+    uvLight.style.left = (px + PLAYER_W/2)+'px';
+    uvLight.style.top  = (py + PLAYER_H/2)+'px';
+  } else {
+    uvLight.style.display='none';
+  }
+
+  updateSecrets();
+  applyCamera();
+  drawMinimap();
+  requestAnimationFrame(gameLoop);
+}
+
+// ═══════════════════════════════════════════════
+//  INPUT
+// ═══════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  keysDown[e.key] = true;
+
+  if (e.key === ' ') { e.preventDefault(); interact(); }
+
+  if (e.key === 'x' || e.key === 'X') {
+    if (uvHasItem) {
+      uvOn = !uvOn;
+      uvBtn.textContent = `[ UV LIGHT: ${uvOn?'ON':'OFF'} ]`;
+      uvBtn.classList.toggle('on', uvOn);
+    } else {
+      showToast('🔦 UV FLASHLIGHT NOT YET FOUND');
+    }
+  }
+});
+document.addEventListener('keyup', e => { keysDown[e.key] = false; });
+
+uvBtn.addEventListener('click', () => {
+  if (uvHasItem) {
+    uvOn = !uvOn;
+    uvBtn.textContent = `[ UV LIGHT: ${uvOn?'ON':'OFF'} ]`;
+    uvBtn.classList.toggle('on', uvOn);
+  } else {
+    showToast('🔦 UV FLASHLIGHT NOT YET FOUND');
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  START / RESTART
+// ═══════════════════════════════════════════════
+document.getElementById('startBtn').onclick = startGame;
+document.getElementById('restartBtn').onclick = () => location.reload();
+
+function startGame() {
+  startScreen.classList.add('hidden');
+  gameWrap.classList.remove('hidden');
+  setupLayout();
+  gameRunning = true;
+  startSyringeTimer();
+  requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
+

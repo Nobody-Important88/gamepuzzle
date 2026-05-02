@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Calculus AB — Complete Course</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --cream: #faf8f3;
+    --parchment: #f0ebe0;
+    --gold: #c9963a;
+    --gold-light: #e8c06a;
+    --rust: #b84c2e;
+    --teal: #2a6b6e;
+    --teal-light: #3d8f93;
+    --muted: #6b6460;
+    --border: #d8d0c0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(255,255,255,0.04) 39px,
+      rgba(255,255,255,0.04) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 39px,
+      rgba(255,255,255,0.04) 39px,
+      rgba(255,255,255,0.04) 40px
+    );
+    pointer-events: none;
+  }
+  .header-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+  header p {
+    margin-top: 1rem;
+    color: rgba(250,248,243,0.6);
+    font-size: 0.95rem;
+    font-weight: 300;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  .units-bar {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .units-bar button {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid rgba(250,248,243,0.2);
+    color: rgba(250,248,243,0.65);
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .units-bar button:hover,
+  .units-bar button.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  /* ── UNIT CARD ── */
+  .unit {
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s;
+  }
+  .unit:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+  .unit-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    background: var(--parchment);
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s;
+  }
+  .unit-header:hover { background: #e8e2d5; }
+  .unit.open .unit-header { border-bottom-color: var(--border); }
+
+  .unit-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .unit-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    flex: 1;
+  }
+  .unit-chevron {
+    font-size: 0.8rem;
+    color: var(--muted);
+    transition: transform 0.25s;
+    flex-shrink: 0;
+  }
+  .unit.open .unit-chevron { transform: rotate(180deg); }
+
+  .unit-body {
+    display: none;
+    padding: 0;
+  }
+  .unit.open .unit-body { display: block; }
+
+  /* ── LESSONS ── */
+  .lesson {
+    border-bottom: 1px solid var(--border);
+  }
+  .lesson:last-child { border-bottom: none; }
+
+  .lesson-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+  }
+  .lesson-header:hover { background: #faf8f3; }
+
+  .lesson-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .lesson.open .lesson-dot { background: var(--teal); }
+
+  .lesson-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .lesson-toggle {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    transition: transform 0.2s;
+  }
+  .lesson.open .lesson-toggle { transform: rotate(180deg); }
+
+  .lesson-content {
+    display: none;
+    padding: 1.4rem 1.5rem 1.8rem 2.8rem;
+    background: #fdfdfc;
+    border-top: 1px solid var(--border);
+  }
+  .lesson.open .lesson-content { display: block; }
+
+  /* ── CONTENT STYLES ── */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    margin-top: 1.4rem;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .lesson-content h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--ink);
+  }
+  .lesson-content p {
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: #3a3632;
+    margin-bottom: 0.6rem;
+  }
+  .lesson-content ul {
+    list-style: none;
+    margin-bottom: 0.8rem;
+  }
+  .lesson-content ul li {
+    font-size: 0.87rem;
+    line-height: 1.7;
+    color: #3a3632;
+    padding-left: 1.1rem;
+    position: relative;
+    margin-bottom: 0.2rem;
+  }
+  .lesson-content ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--teal);
+    font-size: 0.75rem;
+    top: 0.12em;
+  }
+
+  .formula-box {
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 3px;
+    padding: 1rem 1.25rem;
+    margin: 0.8rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.8;
+    border-left: 3px solid var(--gold);
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+  .formula-box .comment {
+    color: rgba(250,248,243,0.35);
+    font-size: 0.75rem;
+  }
+
+  .example-box {
+    background: #f0f7f7;
+    border: 1px solid #c5dfe0;
+    border-left: 3px solid var(--teal);
+    border-radius: 3px;
+    padding: 0.9rem 1.1rem;
+    margin: 0.8rem 0;
+    font-size: 0.87rem;
+    line-height: 1.7;
+    color: #1e3d3f;
+  }
+  .example-box strong { color: var(--teal); font-weight: 600; }
+
+  .tip-box {
+    background: #fff8ee;
+    border: 1px solid #e8c875;
+    border-left: 3px solid var(--gold);
+    border-radius: 3px;
+    padding: 0.9rem 1.1rem;
+    margin: 0.8rem 0;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #4a3a10;
+  }
+  .tip-box strong { color: var(--gold); }
+
+  .warn-box {
+    background: #fff2f0;
+    border: 1px solid #e8b0a5;
+    border-left: 3px solid var(--rust);
+    border-radius: 3px;
+    padding: 0.9rem 1.1rem;
+    margin: 0.8rem 0;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: #4a1a10;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .progress-bar-bg {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 2px;
+  }
+  .progress-bar-fill {
+    height: 3px;
+    background: linear-gradient(90deg, var(--teal-light), var(--gold));
+    border-radius: 2px;
+    transition: width 0.4s;
+    width: 0%;
+  }
+  .progress-label { color: var(--gold); white-space: nowrap; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .unit { animation: fadeIn 0.4s ease both; }
+  .unit:nth-child(1) { animation-delay: 0.05s; }
+  .unit:nth-child(2) { animation-delay: 0.10s; }
+  .unit:nth-child(3) { animation-delay: 0.15s; }
+  .unit:nth-child(4) { animation-delay: 0.20s; }
+  .unit:nth-child(5) { animation-delay: 0.25s; }
+  .unit:nth-child(6) { animation-delay: 0.30s; }
+  .unit:nth-child(7) { animation-delay: 0.35s; }
+  .unit:nth-child(8) { animation-delay: 0.40s; }
+
+  @media (max-width: 600px) {
+    .lesson-content { padding-left: 1.5rem; }
+    header h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">College Board · AP Course</div>
+  <h1>AP Calculus <em>AB</em></h1>
+  <p>A complete structured curriculum — limits, derivatives, integrals, and the Fundamental Theorem. Every major topic, every key formula.</p>
+  <div class="units-bar" id="unitNav"></div>
+</header>
+
+<div class="progress-strip">
+  <span>PROGRESS</span>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <span class="progress-label" id="progressLabel">0 / 0 lessons opened</span>
+</div>
+
+<div class="container" id="courseContainer"></div>
+
+<footer>AP CALCULUS AB · COMPLETE LESSON GUIDE · ALL UNITS COVERED</footer>
+
+<script>
+const UNITS = [
+  {
+    title: "Limits & Continuity",
+    lessons: [
+      {
+        name: "Introduction to Limits",
+        body: `
+<div class="section-label">Concept</div>
+<p>A <strong>limit</strong> describes the value a function <em>approaches</em> as the input approaches some value — not necessarily what the function equals there.</p>
+<div class="formula-box">lim f(x) = L   as x → c
+<span class="comment">// "As x gets close to c, f(x) gets close to L"</span></div>
+<div class="section-label">One-Sided Limits</div>
+<ul>
+  <li><strong>Left-hand limit:</strong> lim f(x) as x → c⁻ (approaching from the left)</li>
+  <li><strong>Right-hand limit:</strong> lim f(x) as x → c⁺ (approaching from the right)</li>
+  <li>A two-sided limit exists if and only if both one-sided limits exist AND are equal</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> f(x) = (x² − 4)/(x − 2). As x → 2, direct substitution gives 0/0, but factor: (x+2)(x−2)/(x−2) = x+2. So lim = 4.</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> A function does NOT need to be defined at c for the limit to exist. The limit is about approach, not arrival.</div>
+`
+      },
+      {
+        name: "Limit Laws & Algebraic Techniques",
+        body: `
+<div class="section-label">Limit Laws</div>
+<p>If lim f(x) = L and lim g(x) = M as x → c, then:</p>
+<div class="formula-box">lim [f ± g] = L ± M
+lim [f · g] = L · M
+lim [f / g] = L / M   (M ≠ 0)
+lim [f(x)]ⁿ = Lⁿ
+lim k·f(x) = k·L</div>
+<div class="section-label">Algebraic Tricks for Indeterminate Forms</div>
+<ul>
+  <li><strong>Factoring:</strong> Cancel common factors causing 0/0</li>
+  <li><strong>Rationalizing:</strong> Multiply by conjugate for radical expressions</li>
+  <li><strong>Trig identities:</strong> Rewrite using sin/cos relationships</li>
+</ul>
+<div class="formula-box">Key trig limits:
+lim (sin x)/x = 1   as x → 0
+lim (1 − cos x)/x = 0   as x → 0</div>
+<div class="example-box"><strong>Example:</strong> lim (√x − 2)/(x − 4) as x → 4: multiply by (√x + 2)/(√x + 2) → 1/(√x + 2) → 1/4.</div>
+`
+      },
+      {
+        name: "Continuity",
+        body: `
+<div class="section-label">Definition</div>
+<p>f is continuous at x = c if ALL three conditions hold:</p>
+<div class="formula-box">1. f(c) is defined
+2. lim f(x) exists as x → c
+3. lim f(x) = f(c)</div>
+<div class="section-label">Types of Discontinuity</div>
+<ul>
+  <li><strong>Removable:</strong> limit exists but ≠ f(c), or f(c) undefined (hole in graph)</li>
+  <li><strong>Jump:</strong> left and right limits exist but are unequal</li>
+  <li><strong>Infinite:</strong> limit is ±∞ (vertical asymptote)</li>
+</ul>
+<div class="section-label">Intermediate Value Theorem (IVT)</div>
+<p>If f is continuous on [a,b] and k is between f(a) and f(b), then there exists c in (a,b) with f(c) = k.</p>
+<div class="tip-box"><strong>✦ AP Tip:</strong> IVT is used to guarantee the existence of a zero — if f(a) and f(b) have opposite signs, a root must exist between them.</div>
+`
+      },
+      {
+        name: "Limits at Infinity & Asymptotes",
+        body: `
+<div class="section-label">Horizontal Asymptotes</div>
+<p>Found by evaluating lim f(x) as x → ±∞.</p>
+<div class="formula-box">For rational functions p(x)/q(x):
+• deg p < deg q → HA at y = 0
+• deg p = deg q → HA at y = (leading coeff ratio)
+• deg p > deg q → no HA (check for slant asymptote)</div>
+<div class="section-label">Vertical Asymptotes</div>
+<p>Occur where the denominator = 0 but numerator ≠ 0 (no cancellation).</p>
+<div class="example-box"><strong>Example:</strong> f(x) = (3x² + 2)/(x² − 5). As x → ±∞, divide top and bottom by x²: (3 + 2/x²)/(1 − 5/x²) → 3/1 = 3. So HA: y = 3.</div>
+<div class="warn-box"><strong>⚠ Watch Out:</strong> A function can cross its horizontal asymptote! Asymptotes only describe end behavior.</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Differentiation — Definition & Fundamental Properties",
+    lessons: [
+      {
+        name: "The Derivative — Definition",
+        body: `
+<div class="section-label">Limit Definition</div>
+<p>The derivative measures the instantaneous rate of change (slope of the tangent line).</p>
+<div class="formula-box">f'(x) = lim [f(x+h) − f(x)] / h   as h → 0
+
+Alternate form at x = a:
+f'(a) = lim [f(x) − f(a)] / (x − a)   as x → a</div>
+<div class="section-label">Interpretation</div>
+<ul>
+  <li><strong>Geometric:</strong> slope of the tangent line to f at x</li>
+  <li><strong>Physical:</strong> instantaneous velocity if f = position</li>
+  <li><strong>Rate:</strong> how fast f is changing with respect to x</li>
+</ul>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Know how to compute derivatives from the limit definition — this appears on free-response sections. Practice with f(x) = x², x³, √x, 1/x.</div>
+`
+      },
+      {
+        name: "Basic Differentiation Rules",
+        body: `
+<div class="section-label">Core Rules</div>
+<div class="formula-box">Power Rule:        d/dx [xⁿ] = n·xⁿ⁻¹
+Constant:          d/dx [c] = 0
+Constant Multiple: d/dx [c·f] = c·f'
+Sum/Difference:    d/dx [f ± g] = f' ± g'</div>
+<div class="section-label">Trig Derivatives</div>
+<div class="formula-box">d/dx [sin x] = cos x
+d/dx [cos x] = −sin x
+d/dx [tan x] = sec²x
+d/dx [cot x] = −csc²x
+d/dx [sec x] = sec x·tan x
+d/dx [csc x] = −csc x·cot x</div>
+<div class="section-label">Exponential & Log</div>
+<div class="formula-box">d/dx [eˣ] = eˣ
+d/dx [aˣ] = aˣ·ln a
+d/dx [ln x] = 1/x
+d/dx [logₐx] = 1/(x·ln a)</div>
+<div class="example-box"><strong>Example:</strong> f(x) = 4x³ − 7x + e^x + ln x → f'(x) = 12x² − 7 + eˣ + 1/x.</div>
+`
+      },
+      {
+        name: "Product & Quotient Rules",
+        body: `
+<div class="formula-box">Product Rule:
+d/dx [f·g] = f'·g + f·g'
+
+Quotient Rule:
+d/dx [f/g] = (f'·g − f·g') / g²
+<span class="comment">// Mnemonic: "Low d-High minus High d-Low, over Low squared"</span></div>
+<div class="example-box"><strong>Product Example:</strong> h(x) = x²·sin x → h'(x) = 2x·sin x + x²·cos x.</div>
+<div class="example-box"><strong>Quotient Example:</strong> h(x) = (x² + 1)/(x − 3)
+→ h'(x) = [2x(x−3) − (x²+1)·1] / (x−3)²
+= (2x² − 6x − x² − 1) / (x−3)²
+= (x² − 6x − 1) / (x−3)²</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> You can always use Product Rule instead of Quotient Rule by writing f/g as f · g⁻¹, but most students find Quotient Rule faster for clean rational functions.</div>
+`
+      },
+      {
+        name: "Chain Rule",
+        body: `
+<div class="section-label">The Chain Rule</div>
+<p>Used when differentiating a <em>composite</em> function — a function inside another function.</p>
+<div class="formula-box">d/dx [f(g(x))] = f'(g(x)) · g'(x)
+<span class="comment">// "Derivative of outside (leave inside alone) times derivative of inside"</span></div>
+<div class="example-box"><strong>Example 1:</strong> h(x) = sin(x²) → h'(x) = cos(x²) · 2x</div>
+<div class="example-box"><strong>Example 2:</strong> h(x) = (3x + 5)⁷ → h'(x) = 7(3x+5)⁶ · 3 = 21(3x+5)⁶</div>
+<div class="example-box"><strong>Example 3:</strong> h(x) = e^(cos x) → h'(x) = e^(cos x) · (−sin x)</div>
+<div class="warn-box"><strong>⚠ Common Error:</strong> Forgetting to multiply by the derivative of the inside. ALWAYS apply the chain rule when the argument is not just "x".</div>
+`
+      },
+      {
+        name: "Implicit Differentiation",
+        body: `
+<div class="section-label">When to Use</div>
+<p>Use implicit differentiation when y cannot (or is not) isolated on one side — e.g. x² + y² = 25 (a circle).</p>
+<div class="section-label">Procedure</div>
+<ul>
+  <li>Differentiate both sides with respect to x</li>
+  <li>Every time you differentiate a term with y, multiply by dy/dx (chain rule)</li>
+  <li>Collect all dy/dx terms on one side and solve</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> x² + y² = 25
+Differentiate: 2x + 2y·(dy/dx) = 0
+Solve: dy/dx = −x/y</div>
+<div class="formula-box">Key pattern:
+d/dx [yⁿ] = n·yⁿ⁻¹ · (dy/dx)</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> To find the slope of a tangent at a specific point (a,b), substitute x=a and y=b into the dy/dx expression.</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Differentiation — Composite, Implicit & Inverse",
+    lessons: [
+      {
+        name: "Derivatives of Inverse Trig Functions",
+        body: `
+<div class="formula-box">d/dx [arcsin x] = 1/√(1−x²)
+d/dx [arccos x] = −1/√(1−x²)
+d/dx [arctan x] = 1/(1+x²)
+d/dx [arccot x] = −1/(1+x²)
+d/dx [arcsec x] = 1/(|x|√(x²−1))
+d/dx [arccsc x] = −1/(|x|√(x²−1))</div>
+<div class="example-box"><strong>Example:</strong> d/dx [arctan(3x)] = 1/(1+(3x)²) · 3 = 3/(1+9x²)</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> arcsin, arccos, and arctan are by far the most tested. Memorize all three. The others rarely appear.</div>
+`
+      },
+      {
+        name: "Higher-Order Derivatives",
+        body: `
+<div class="section-label">Notation</div>
+<div class="formula-box">f'(x)   — first derivative
+f''(x)  — second derivative (derivative of f')
+f'''(x) — third derivative
+f⁽ⁿ⁾(x) — nth derivative
+
+Leibniz: dy/dx, d²y/dx², d³y/dx³</div>
+<div class="section-label">Interpretations</div>
+<ul>
+  <li>f'(x): velocity (if f = position); rate of change of f</li>
+  <li>f''(x): acceleration; tells us concavity of f</li>
+  <li>f'' > 0 → concave up; f'' < 0 → concave down</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> f(x) = x⁴ − 2x³ + x
+f'(x) = 4x³ − 6x² + 1
+f''(x) = 12x² − 12x
+f'''(x) = 24x − 12</div>
+`
+      },
+      {
+        name: "Related Rates",
+        body: `
+<div class="section-label">Strategy</div>
+<ul>
+  <li>Draw a diagram and label all quantities with variables</li>
+  <li>Identify which rates are given and which are unknown (e.g., dr/dt, dV/dt)</li>
+  <li>Write an equation relating the variables</li>
+  <li>Differentiate both sides with respect to <em>t</em> (time)</li>
+  <li>Substitute known values and solve</li>
+</ul>
+<div class="example-box"><strong>Classic Example — Ladder:</strong> A 10-ft ladder leans against a wall. The base slides away at 2 ft/s. How fast is the top sliding down when the base is 6 ft from the wall?
+x² + y² = 100 → 2x(dx/dt) + 2y(dy/dt) = 0
+At x=6: y=8 (Pythagorean triple). 2(6)(2) + 2(8)(dy/dt) = 0 → dy/dt = −3/2 ft/s</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Common setups — ladder, cone/sphere/cylinder volume, shadow length, angle of elevation. Know their geometric formulas cold.</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Contextual Applications of Differentiation",
+    lessons: [
+      {
+        name: "Linear Approximation & Differentials",
+        body: `
+<div class="section-label">Tangent Line Approximation</div>
+<p>Near x = a, a differentiable function is well approximated by its tangent line:</p>
+<div class="formula-box">L(x) = f(a) + f'(a)(x − a)
+<span class="comment">// "Linearization" of f at x = a</span></div>
+<div class="section-label">Differentials</div>
+<div class="formula-box">dy = f'(x) · dx
+<span class="comment">// dy ≈ actual change in f when x changes by dx</span></div>
+<div class="example-box"><strong>Example:</strong> Estimate √9.04. Use f(x) = √x, a = 9. f'(x) = 1/(2√x), f'(9) = 1/6. L(9.04) = 3 + (1/6)(0.04) = 3.0067. Actual: ≈ 3.00666.</div>
+`
+      },
+      {
+        name: "Extreme Values — Absolute & Local",
+        body: `
+<div class="section-label">Critical Points</div>
+<p>A critical point occurs where f'(c) = 0 OR f'(c) is undefined.</p>
+<div class="section-label">Absolute Extrema on [a, b] (Closed Interval Method)</div>
+<ul>
+  <li>Find all critical points in (a, b)</li>
+  <li>Evaluate f at each critical point AND at the endpoints a and b</li>
+  <li>The largest value is the absolute max; the smallest is the absolute min</li>
+</ul>
+<div class="section-label">First Derivative Test</div>
+<ul>
+  <li>f' changes + → − at c: local maximum</li>
+  <li>f' changes − → + at c: local minimum</li>
+  <li>f' doesn't change sign: neither (inflection point)</li>
+</ul>
+<div class="tip-box"><strong>✦ Extreme Value Theorem:</strong> If f is continuous on [a,b], then f MUST attain both an absolute max and an absolute min on [a,b].</div>
+`
+      },
+      {
+        name: "Mean Value Theorem (MVT)",
+        body: `
+<div class="section-label">Statement</div>
+<p>If f is continuous on [a,b] and differentiable on (a,b), then there exists at least one c in (a,b) such that:</p>
+<div class="formula-box">f'(c) = [f(b) − f(a)] / (b − a)
+<span class="comment">// Instantaneous rate = average rate at some point</span></div>
+<p>Geometrically: the tangent line at c is parallel to the secant line from a to b.</p>
+<div class="section-label">Rolle's Theorem (Special Case)</div>
+<p>If f(a) = f(b), then there exists c in (a,b) with f'(c) = 0.</p>
+<div class="example-box"><strong>Example:</strong> f(x) = x² on [1,3]. Average rate = (9−1)/(3−1) = 4. Set f'(c) = 2c = 4 → c = 2. ✓ c = 2 is in (1,3).</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> MVT appears on nearly every AP exam. Be ready to apply it AND to check its hypotheses (continuous on [a,b], differentiable on (a,b)).</div>
+`
+      },
+      {
+        name: "Curve Sketching & Second Derivative Test",
+        body: `
+<div class="section-label">Complete Analysis Steps</div>
+<ul>
+  <li>Domain and intercepts</li>
+  <li>Find f'(x): critical points, intervals of increase/decrease</li>
+  <li>Find f''(x): concavity, inflection points</li>
+  <li>Asymptotes (vertical and horizontal)</li>
+</ul>
+<div class="section-label">Second Derivative Test</div>
+<div class="formula-box">At a critical point c where f'(c) = 0:
+  f''(c) > 0 → local minimum
+  f''(c) < 0 → local maximum
+  f''(c) = 0 → inconclusive (use 1st deriv test)</div>
+<div class="section-label">Inflection Points</div>
+<p>Points where concavity changes (f'' changes sign). f''(c) = 0 is necessary but not sufficient.</p>
+<div class="warn-box"><strong>⚠ Common Error:</strong> An inflection point exists only if f'' CHANGES SIGN at c, not merely if f''(c) = 0.</div>
+`
+      },
+      {
+        name: "Optimization",
+        body: `
+<div class="section-label">Procedure</div>
+<ul>
+  <li>Define variables and write an <strong>objective function</strong> (what to maximize or minimize)</li>
+  <li>Use a constraint equation to reduce to one variable</li>
+  <li>Find critical points by setting derivative = 0</li>
+  <li>Verify max or min using first or second derivative test (or closed interval method)</li>
+</ul>
+<div class="example-box"><strong>Classic — Fence Problem:</strong> Maximize area with 200 ft of fence, one side against a barn. A = xy, constraint: x + 2y = 200 → x = 200−2y. A(y) = (200−2y)y = 200y − 2y². A'(y) = 200 − 4y = 0 → y = 50, x = 100. A = 5000 ft².</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Always verify your answer makes physical sense. Label your variables clearly and write down your objective function before differentiating.</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Analytical Applications of Differentiation",
+    lessons: [
+      {
+        name: "L'Hôpital's Rule",
+        body: `
+<div class="section-label">When to Apply</div>
+<p>Use L'Hôpital's Rule when a limit yields an indeterminate form: <strong>0/0</strong> or <strong>∞/∞</strong>.</p>
+<div class="formula-box">If lim f(x)/g(x) = 0/0 or ∞/∞, then:
+lim f(x)/g(x) = lim f'(x)/g'(x)
+<span class="comment">// Differentiate numerator and denominator SEPARATELY (not quotient rule!)</span></div>
+<div class="example-box"><strong>Example:</strong> lim (sin x)/x as x→0 = lim (cos x)/1 = 1. ✓</div>
+<div class="section-label">Other Indeterminate Forms</div>
+<p>Convert 0·∞, 1^∞, 0^0, ∞^0, ∞−∞ into 0/0 or ∞/∞ using algebra or logarithms before applying L'Hôpital's.</p>
+<div class="warn-box"><strong>⚠ Watch Out:</strong> L'Hôpital's Rule applies only to 0/0 or ∞/∞. Applying it to 5/0 or other forms gives WRONG answers.</div>
+`
+      },
+      {
+        name: "Particle Motion",
+        body: `
+<div class="section-label">Position, Velocity, Acceleration</div>
+<div class="formula-box">s(t) — position
+v(t) = s'(t) — velocity
+a(t) = v'(t) = s''(t) — acceleration</div>
+<div class="section-label">Key Concepts</div>
+<ul>
+  <li>Particle moves right when v(t) > 0; left when v(t) < 0</li>
+  <li>Particle is at rest when v(t) = 0</li>
+  <li>Particle speeds up when v and a have the same sign; slows down when they have opposite signs</li>
+  <li>Total distance traveled ≠ displacement (use |v(t)| or split by direction changes)</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> s(t) = t³ − 6t² + 9t. v(t) = 3t² − 12t + 9 = 3(t−1)(t−3). Particle at rest at t=1 and t=3. Speeds up on (1,3) since both v < 0 and a < 0 (check: a(2) = 6(2)−12 = 0… a(t) = 6t−12, a(1)=−6, a(3)=6).</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Integration — Definition & Accumulation",
+    lessons: [
+      {
+        name: "Antiderivatives & Indefinite Integrals",
+        body: `
+<div class="section-label">Definition</div>
+<p>F is an antiderivative of f if F'(x) = f(x). The indefinite integral collects all antiderivatives:</p>
+<div class="formula-box">∫ f(x) dx = F(x) + C
+<span class="comment">// C is the constant of integration — always include it!</span></div>
+<div class="section-label">Basic Antiderivative Rules</div>
+<div class="formula-box">∫ xⁿ dx = xⁿ⁺¹/(n+1) + C   (n ≠ −1)
+∫ 1/x dx = ln|x| + C
+∫ eˣ dx = eˣ + C
+∫ aˣ dx = aˣ/ln a + C
+∫ cos x dx = sin x + C
+∫ sin x dx = −cos x + C
+∫ sec²x dx = tan x + C
+∫ csc²x dx = −cot x + C
+∫ sec x tan x dx = sec x + C
+∫ csc x cot x dx = −csc x + C
+∫ 1/√(1−x²) dx = arcsin x + C
+∫ 1/(1+x²) dx = arctan x + C</div>
+`
+      },
+      {
+        name: "Riemann Sums & Definite Integrals",
+        body: `
+<div class="section-label">Riemann Sums</div>
+<p>Approximate the area under a curve by dividing [a,b] into n subintervals of width Δx = (b−a)/n.</p>
+<div class="formula-box">Left Riemann Sum:  Σ f(xᵢ) · Δx   (use left endpoints)
+Right Riemann Sum: Σ f(xᵢ₊₁) · Δx  (use right endpoints)
+Midpoint Sum:      Σ f(midpoints) · Δx
+Trapezoidal Sum:   Σ [(f(xᵢ) + f(xᵢ₊₁))/2] · Δx</div>
+<div class="section-label">Definite Integral</div>
+<p>The limit of Riemann sums as n → ∞ (and Δx → 0):</p>
+<div class="formula-box">∫ₐᵇ f(x) dx = lim Σ f(xᵢ*) Δx   as n → ∞</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> If f ≥ 0, the definite integral = area under the curve. If f takes negative values, the integral = signed area (area above x-axis minus area below).</div>
+`
+      },
+      {
+        name: "Fundamental Theorem of Calculus",
+        body: `
+<div class="section-label">Part 1 — The Accumulation Function</div>
+<div class="formula-box">If g(x) = ∫ₐˣ f(t) dt, then g'(x) = f(x)
+<span class="comment">// Differentiation and integration are inverse operations</span></div>
+<div class="example-box"><strong>Chain Rule Extension:</strong> If g(x) = ∫ₐ^(u(x)) f(t) dt, then g'(x) = f(u(x)) · u'(x)</div>
+<div class="section-label">Part 2 — Evaluation Theorem</div>
+<div class="formula-box">∫ₐᵇ f(x) dx = F(b) − F(a)
+<span class="comment">// where F is ANY antiderivative of f</span></div>
+<div class="example-box"><strong>Example:</strong> ∫₁³ (3x² − 2) dx = [x³ − 2x]₁³ = (27 − 6) − (1 − 2) = 21 − (−1) = 22.</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Part 1 shows up heavily in FRQs asking you to differentiate functions defined as integrals. Part 2 is used constantly for evaluation.</div>
+`
+      },
+      {
+        name: "Properties of Definite Integrals",
+        body: `
+<div class="formula-box">∫ₐᵃ f(x) dx = 0
+∫ₐᵇ f(x) dx = −∫ᵦₐ f(x) dx
+∫ₐᵇ [f ± g] dx = ∫ₐᵇ f dx ± ∫ₐᵇ g dx
+∫ₐᵇ c·f(x) dx = c·∫ₐᵇ f(x) dx
+∫ₐᵇ f dx + ∫ᵦ꜀ f dx = ∫ₐ꜀ f dx   (Additive)</div>
+<div class="section-label">Even & Odd Functions</div>
+<div class="formula-box">f even (f(−x)=f(x)):  ∫₋ₐᵃ f dx = 2·∫₀ᵃ f dx
+f odd  (f(−x)=−f(x)): ∫₋ₐᵃ f dx = 0</div>
+<div class="example-box"><strong>Example:</strong> ∫₋₂² x³ dx = 0 because x³ is odd.</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Differential Equations & Integration Techniques",
+    lessons: [
+      {
+        name: "U-Substitution",
+        body: `
+<div class="section-label">Technique</div>
+<p>Reverse chain rule. If the integrand contains a function and its derivative, substitute u for the inner function.</p>
+<div class="formula-box">Let u = g(x), then du = g'(x) dx
+∫ f(g(x)) · g'(x) dx = ∫ f(u) du</div>
+<div class="section-label">Steps</div>
+<ul>
+  <li>Choose u (typically the "inside" of a composition)</li>
+  <li>Compute du = (du/dx) dx → solve for dx</li>
+  <li>Substitute and simplify</li>
+  <li>Integrate with respect to u</li>
+  <li>Back-substitute u = g(x)</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> ∫ 2x·cos(x²) dx. Let u = x², du = 2x dx. → ∫ cos u du = sin u + C = sin(x²) + C.</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> For definite integrals with u-sub, either back-substitute and use original limits, OR change the limits of integration to u-values.</div>
+`
+      },
+      {
+        name: "Separable Differential Equations",
+        body: `
+<div class="section-label">What They Are</div>
+<p>A first-order ODE is separable if it can be written as dy/dx = f(x)·g(y) — all x terms on one side, all y terms on the other.</p>
+<div class="section-label">Procedure</div>
+<ul>
+  <li>Separate: (1/g(y)) dy = f(x) dx</li>
+  <li>Integrate both sides</li>
+  <li>Solve for y (if possible); apply initial condition to find C</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> dy/dx = 2xy, y(0) = 3.
+Separate: dy/y = 2x dx
+Integrate: ln|y| = x² + C
+Solve: y = Ae^(x²)
+Apply y(0)=3: A = 3 → y = 3e^(x²)</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Always verify y satisfies the original ODE AND the initial condition. Write general solution before applying initial conditions.</div>
+`
+      },
+      {
+        name: "Slope Fields",
+        body: `
+<div class="section-label">What Is a Slope Field?</div>
+<p>A slope field (direction field) is a graphical representation of a differential equation dy/dx = f(x,y). At each point (x,y) on the grid, a small line segment is drawn with slope f(x,y).</p>
+<div class="section-label">Reading a Slope Field</div>
+<ul>
+  <li>Horizontal segments → dy/dx = 0 at those points</li>
+  <li>Steeper segments → larger |dy/dx|</li>
+  <li>A solution curve through a point must be tangent to the field at every point it passes through</li>
+</ul>
+<div class="tip-box"><strong>✦ AP Tip:</strong> You'll be asked to match a slope field to a DE, or to sketch a solution through a given point. Look for where slopes are 0, where they're positive vs. negative, and whether they depend on x only, y only, or both.</div>
+`
+      },
+      {
+        name: "Exponential Growth & Decay",
+        body: `
+<div class="section-label">Model</div>
+<div class="formula-box">dy/dt = k·y   (separable ODE)
+Solution: y(t) = y₀·eᵏᵗ
+  k > 0 → exponential growth
+  k < 0 → exponential decay</div>
+<div class="section-label">Half-Life</div>
+<div class="formula-box">Half-life T½ satisfies: y₀/2 = y₀·e^(k·T½)
+→ T½ = −ln2 / k   (for decay, k < 0)</div>
+<div class="example-box"><strong>Example — Carbon Dating:</strong> k = −0.000121 (for C-14). A sample has 30% of its original C-14. Find age: 0.30 = e^(−0.000121·t) → t = −ln(0.30)/0.000121 ≈ 9950 years.</div>
+`
+      }
+    ]
+  },
+  {
+    title: "Applications of Integration",
+    lessons: [
+      {
+        name: "Area Between Curves",
+        body: `
+<div class="section-label">Setup</div>
+<p>If f(x) ≥ g(x) on [a, b], the area between them is:</p>
+<div class="formula-box">A = ∫ₐᵇ [f(x) − g(x)] dx
+<span class="comment">// "Top minus bottom" integrated over the interval</span></div>
+<div class="section-label">When Curves Intersect</div>
+<ul>
+  <li>Find intersection points by setting f(x) = g(x)</li>
+  <li>Split the integral at each intersection point</li>
+  <li>On each sub-interval, determine which function is on top</li>
+  <li>Sum the absolute values of each piece</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> Area between y = x² and y = x on [0,1]. x ≥ x² on [0,1]. A = ∫₀¹ (x − x²) dx = [x²/2 − x³/3]₀¹ = 1/2 − 1/3 = 1/6.</div>
+`
+      },
+      {
+        name: "Average Value of a Function",
+        body: `
+<div class="formula-box">Average value of f on [a,b]:
+f_avg = (1/(b−a)) · ∫ₐᵇ f(x) dx</div>
+<div class="section-label">Mean Value Theorem for Integrals</div>
+<p>If f is continuous on [a,b], there exists c in (a,b) such that f(c) = f_avg. The function actually attains its average value.</p>
+<div class="example-box"><strong>Example:</strong> Average value of f(x) = x² on [0,3]:
+= (1/3) · ∫₀³ x² dx = (1/3) · [x³/3]₀³ = (1/3)(9) = 3.</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> This formula appears in both MCQ and FRQ. Note the (1/(b−a)) factor — a common source of errors when students forget to divide.</div>
+`
+      },
+      {
+        name: "Volumes — Disk & Washer Method",
+        body: `
+<div class="section-label">Disk Method (solid axis as boundary)</div>
+<div class="formula-box">V = π · ∫ₐᵇ [f(x)]² dx
+<span class="comment">// Rotating f(x) ≥ 0 around the x-axis</span></div>
+<div class="section-label">Washer Method (gap between curves)</div>
+<div class="formula-box">V = π · ∫ₐᵇ ([R(x)]² − [r(x)]²) dx
+  R(x) = outer radius = distance from axis to outer curve
+  r(x) = inner radius = distance from axis to inner curve</div>
+<div class="example-box"><strong>Example:</strong> Rotate region between y=√x and y=x² around x-axis, x∈[0,1]. R=√x, r=x². V = π∫₀¹ (x − x⁴) dx = π[x²/2 − x⁵/5]₀¹ = π(1/2 − 1/5) = 3π/10.</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Rotating around y = k (a non-axis horizontal line) requires adjusting the radius: R(x) = |f(x) − k|.</div>
+`
+      },
+      {
+        name: "Volumes — Shell Method",
+        body: `
+<div class="section-label">Shell Method Formula</div>
+<div class="formula-box">V = 2π · ∫ₐᵇ x · f(x) dx
+<span class="comment">// Rotating around y-axis, for vertical slices</span></div>
+<p>Each cylindrical shell has: radius = x, height = f(x), thickness = dx. Volume of one shell ≈ 2π·x·f(x)·dx.</p>
+<div class="section-label">When to Use Shells vs. Disks</div>
+<ul>
+  <li>Shells are convenient when expressing x as a function of y is difficult</li>
+  <li>Shells work naturally when rotating around the y-axis with vertical slices</li>
+  <li>Disks/Washers work naturally when rotating around the x-axis with vertical slices</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> Rotate y = x² from x=0 to x=2 around y-axis using shells: V = 2π∫₀² x·x² dx = 2π∫₀² x³ dx = 2π[x⁴/4]₀² = 2π·4 = 8π.</div>
+`
+      },
+      {
+        name: "Accumulation & Net Change",
+        body: `
+<div class="section-label">Net Change Theorem</div>
+<p>The integral of a rate of change gives the net change (total accumulation minus total loss):</p>
+<div class="formula-box">∫ₐᵇ F'(x) dx = F(b) − F(a)
+<span class="comment">// Net change in F from a to b</span></div>
+<div class="section-label">Applications</div>
+<ul>
+  <li><strong>Displacement:</strong> ∫ₐᵇ v(t) dt = s(b) − s(a)</li>
+  <li><strong>Total distance:</strong> ∫ₐᵇ |v(t)| dt</li>
+  <li><strong>Population change:</strong> ∫ₐᵇ [rate in − rate out] dt</li>
+  <li><strong>Water in tank:</strong> ∫ₐᵇ [flow in − flow out] dt</li>
+</ul>
+<div class="example-box"><strong>Example:</strong> A particle has velocity v(t) = t² − 4. Displacement from t=0 to t=3: ∫₀³(t²−4) dt = [t³/3 − 4t]₀³ = (9−12) = −3. So net displacement is −3 units.</div>
+<div class="tip-box"><strong>✦ AP Tip:</strong> Displacement can be negative (particle ended up to the left of start). Total distance is always non-negative — integrate |v(t)|, splitting at zeros of v.</div>
+`
+      }
+    ]
+  }
+];
+
+let openedLessons = new Set();
+let totalLessons = UNITS.reduce((s, u) => s + u.lessons.length, 0);
+
+function updateProgress() {
+  const pct = totalLessons ? (openedLessons.size / totalLessons * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${openedLessons.size} / ${totalLessons} lessons opened`;
+}
+
+function buildCourse() {
+  const container = document.getElementById('courseContainer');
+  const nav = document.getElementById('unitNav');
+
+  UNITS.forEach((unit, ui) => {
+    // Nav button
+    const btn = document.createElement('button');
+    btn.textContent = `Unit ${ui+1}`;
+    btn.dataset.ui = ui;
+    btn.addEventListener('click', () => {
+      const el = document.getElementById(`unit-${ui}`);
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!el.classList.contains('open')) {
+        el.querySelector('.unit-header').click();
+      }
+    });
+    nav.appendChild(btn);
+
+    // Unit card
+    const unitEl = document.createElement('div');
+    unitEl.className = 'unit';
+    unitEl.id = `unit-${ui}`;
+
+    const unitHeader = document.createElement('div');
+    unitHeader.className = 'unit-header';
+    unitHeader.innerHTML = `
+      <span class="unit-num">Unit ${ui+1}</span>
+      <span class="unit-title">${unit.title}</span>
+      <span class="unit-chevron">▾</span>
+    `;
+    unitHeader.addEventListener('click', () => {
+      const isOpen = unitEl.classList.toggle('open');
+      nav.querySelectorAll('button')[ui].classList.toggle('active', isOpen);
+    });
+
+    const unitBody = document.createElement('div');
+    unitBody.className = 'unit-body';
+
+    unit.lessons.forEach((lesson, li) => {
+      const lessonKey = `${ui}-${li}`;
+      const lessonEl = document.createElement('div');
+      lessonEl.className = 'lesson';
+
+      const lh = document.createElement('div');
+      lh.className = 'lesson-header';
+      lh.innerHTML = `
+        <span class="lesson-dot"></span>
+        <span class="lesson-name">${lesson.name}</span>
+        <span class="lesson-toggle">▾</span>
+      `;
+      lh.addEventListener('click', () => {
+        lessonEl.classList.toggle('open');
+        if (!openedLessons.has(lessonKey)) {
+          openedLessons.add(lessonKey);
+          updateProgress();
+        }
+      });
+
+      const lc = document.createElement('div');
+      lc.className = 'lesson-content';
+      lc.innerHTML = lesson.body;
+
+      lessonEl.appendChild(lh);
+      lessonEl.appendChild(lc);
+      unitBody.appendChild(lessonEl);
+    });
+
+    unitEl.appendChild(unitHeader);
+    unitEl.appendChild(unitBody);
+    container.appendChild(unitEl);
+  });
+
+  updateProgress();
+}
+
+buildCourse();
+</script>
+</body>
+</html>
