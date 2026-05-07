@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4x4 Puzzle FIXED</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+body{
+    font-family:Arial;
+    background:#f2f2f2;
+    height:100vh;
+    overflow:hidden;
+}
+#board{
+    width:420px;
+    height:420px;
+    position:absolute;
+    left:50%;
+    top:45%;
+    transform:translate(-50%, -50%);
+    background:#222;
+}
+.piece{
+    width:105px;
+    height:105px;
+    position:absolute;
+    overflow:hidden;
+    cursor:grab;
+    user-select:none;
+    border:1px solid rgba(0,0,0,0.2);
+    background:#ddd;
+}
+.piece img{
+    width:100%;
+    height:100%;
+    position:absolute;
+    pointer-events:none;
+    object-fit:cover;
+}
+#preview{
+    width:200px;
+    height:200px;
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    border:2px solid #333;
+    background:#000;
+    display:block;
+}
+#winner{
+    position:absolute;
+    top:20px;
+    width:100%;
+    text-align:center;
+    font-size:28px;
+    color:green;
+}
+</style>
+</head>
+<body>
+<div id="board"></div>
+<canvas id="preview" width="200" height="200"></canvas>
+<div id="winner"></div>
+
+<script>
+const PIECE_IMAGES = [
+    "630295938_1243711267125065_6655759929417233564_n.png",
+    "download.jpg",
+    "IMG_20251001_093540_599.jpg",
+    "638127149_925960393183644_8328507454410434458_n.jpg",
+    "img/piece4.jpg",
+    "img/piece5.jpg",
+    "img/piece6.jpg",
+    "img/piece7.jpg",
+    "img/piece8.jpg",
+    "img/piece9.jpg",
+    "img/piece10.jpg",
+    "img/piece11.jpg",
+    "img/piece12.jpg",
+    "img/piece13.jpg",
+    "img/piece14.jpg",
+    "img/piece15.jpg",
+]
+const board = document.getElementById("board")
+const previewCanvas = document.getElementById("preview")
+const ctx = previewCanvas.getContext("2d")
+const winner = document.getElementById("winner")
+
+const SIZE = 420
+const CELL = SIZE / 4
+
+let dragged = null
+let offsetX = 0
+let offsetY = 0
+let correct = 0
+
+let snapState = new Array(16).fill(null)
+
+/* SAFE SPAWN */
+function safeSpawnPosition(){
+    const boardRect = board.getBoundingClientRect()
+    const zones = [
+        {xMin: 20, xMax: window.innerWidth - 150, yMin: 20, yMax: boardRect.top - 120},
+        {xMin: 20, xMax: window.innerWidth - 150, yMin: boardRect.bottom + 20, yMax: window.innerHeight - 150}
+    ]
+    const zone = zones[Math.floor(Math.random() * zones.length)]
+    return {
+        x: zone.xMin + Math.random() * (zone.xMax - zone.xMin),
+        y: zone.yMin + Math.random() * (zone.yMax - zone.yMin)
+    }
+}
+
+for(let i = 0; i < 16; i++){
+
+    const piece = document.createElement("div")
+    piece.classList.add("piece")
+    piece.dataset.index = i
+
+    const img = document.createElement("img")
+    img.src = PIECE_IMAGES[i]
+    piece.appendChild(img)
+
+    document.body.appendChild(piece)
+
+    const pos = safeSpawnPosition()
+    piece.style.left = pos.x + "px"
+    piece.style.top = pos.y + "px"
+
+    piece.addEventListener("mousedown", e => {
+        dragged = piece
+        const rect = piece.getBoundingClientRect()
+        offsetX = e.clientX - rect.left
+        offsetY = e.clientY - rect.top
+        piece.style.zIndex = 1000
+    })
+}
+document.addEventListener("mousemove", e => {
+    if(!dragged) return
+    dragged.style.left = (e.clientX - offsetX) + "px"
+    dragged.style.top = (e.clientY - offsetY) + "px"
+    updatePreview()
+})
+document.addEventListener("mouseup", e => {
+    if(!dragged) return
+
+    const boardRect = board.getBoundingClientRect()
+    const x = e.clientX - boardRect.left
+    const y = e.clientY - boardRect.top
+    const inside = x >= 0 && x <= SIZE && y >= 0 && y <= SIZE
+
+    if(inside){
+        const col = Math.floor(x / CELL)
+        const row = Math.floor(y / CELL)
+
+        dragged.style.left = (boardRect.left + col * CELL) + "px"
+        dragged.style.top = (boardRect.top + row * CELL) + "px"
+        const correctIndex = row * 4 + col
+
+        for(let k = 0; k < 16; k++){
+            if(snapState[k] === dragged) snapState[k] = null
+        }
+        snapState[correctIndex] = dragged
+
+        if(parseInt(dragged.dataset.index) === correctIndex){
+            if(!dragged.dataset.locked){
+                correct++
+                dragged.dataset.locked = "true"
+                dragged.style.border = "2px solid lime"
+            }
+        }
+    } else {
+        for(let k = 0; k < 16; k++){
+            if(snapState[k] === dragged) snapState[k] = null
+        }
+    }
+
+    dragged = null
+
+    if(correct === 16){
+        winner.textContent = "YOU COMPLETED THE PUZZLE!"
+    }
+
+    updatePreview()
+})
+
+function updatePreview(){
+    const W = 200
+    const cellS = W / 4
+
+    ctx.clearRect(0, 0, W, W)
+    ctx.fillStyle = "#111"
+    ctx.fillRect(0, 0, W, W)
+
+    for(let gridIdx = 0; gridIdx < 16; gridIdx++){
+        const piece = snapState[gridIdx]
+        if(!piece) continue
+
+        const pieceIdx = parseInt(piece.dataset.index)
+        const src = PIECE_IMAGES[pieceIdx]
+
+        const img = new Image()
+        img.src = src
+
+        const row = Math.floor(gridIdx / 4)
+        const col = gridIdx % 4
+
+        img.onload = () => {
+            ctx.drawImage(img, col * cellS, row * cellS, cellS, cellS)
+        }
+    }
+}
+updatePreview()
+</script>
+
+</body>
+</html>
