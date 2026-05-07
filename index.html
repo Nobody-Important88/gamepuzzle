@@ -99,23 +99,28 @@
         .start:hover { color: green }
         .start span { position: relative; z-index: 1 }
         #board {
-            width: 1800px;
-            height: 940px;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
             border: 4px solid;
             position: relative;
-            background-image: url(space.png)
+            background-image: url(space.png);
         }
         #ui {
             position: absolute;
             top: 10px;
             left: 10px;
-            width: 300px;
-            padding: 10px;
-            background: rgba(0,0,0,0.6);
+            width: 320px;
+            padding: 12px;
+
+            background: rgba(0,0,0,0.65);
             color: white;
-            border-radius: 10px;
-            z-index: 10
+            border-radius: 12px;
+
+            border: 1px solid rgba(0,255,171,0.3);
+            backdrop-filter: blur(6px);
+
+            z-index: 10;
         }
         #inventory {
             display: flex;
@@ -197,17 +202,19 @@
             position:absolute;
         }
         #progressbarContainer {
-            width: 180px;
-            height: 18px;
-            background: rgba(0,255,170,0.05);
-            border: 1px solid #00ffab;
-            box-shadow: 0 0 8px #00ffab;
+            width: 100%;
+            height: 26px;
+            margin-top: 12px;
+
+            background: rgba(0,0,0,0.75);
+            border: 2px solid #00ffab;
+            box-shadow: 0 0 10px rgba(0,255,171,0.4);
+
             position: relative;
             overflow: hidden;
-            border-radius: 6px;
-            transform: translateY(80%)
+            border-radius: 8px;
+            transform: none; /* important: keeps it inside UI flow */
         }
-
 
         #progressbar {
             position: absolute;
@@ -215,24 +222,34 @@
             top: 0;
             width: 0%;
             height: 100%;
+
             background: linear-gradient(90deg, #00ffab, #00b3ff);
-            box-shadow: 0 0 10px #00ffab;
-            z-index: 1;
+
+            box-shadow:
+                inset 0 0 8px rgba(255,255,255,0.2),
+                0 0 10px #00ffab;
+
+            transition: width 0.3s linear;
         }
-
-
-
 
         #counter {
             position: absolute;
             width: 100%;
             height: 100%;
+
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 11px;
-            color: #00ffab;
-            text-shadow: 0 0 6px #00ffab;
+
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+
+            color: #ffffff;
+            text-shadow:
+                0 0 4px #000,
+                0 0 6px #00ffab;
+
             pointer-events: none;
             z-index: 2;
         }
@@ -717,10 +734,11 @@
             })
 
 
-            screen.style.left = 900 - x + "px"
-            screen.style.top = 450 - y + "px"
+            let camX = (window.innerWidth / 2) - x - 25
+            let camY = (window.innerHeight / 2) - y - 25
 
-
+            screen.style.left = camX + "px"
+            screen.style.top = camY + "px"
 
 
             if (!view) {
@@ -864,17 +882,24 @@
                     order.shift()
                 }
             })
-                if(darknessefect()){
-                    darkness.classList.add("active")
-                    let px = 600
-                    let py = 350
-                    darkness.style.background =
-                    `radial-gradient(circle at ${px}px ${py}px, transparent 0px, rgba(0,0,0,0.2) 120px, rgba(0,0,0,0.98) 300px)`
+                if (darknessefect()) {
+                  darkness.classList.add("active")
 
+                  // center of viewport/player
+                  let px = 1030
+                  let py = 500
 
-                }else{
-                    darkness.classList.remove("active")
-                }
+                  darkness.style.background =
+                  `radial-gradient(
+                      circle at ${px}px ${py}px,
+                      transparent 0px,
+                      rgba(0,0,0,0.2) 120px,
+                      rgba(0,0,0,0.98) 300px
+                  )`
+
+              }else {
+                  darkness.classList.remove("active")
+              }
 
 
 
@@ -966,8 +991,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
