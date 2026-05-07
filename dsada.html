@@ -99,23 +99,28 @@
         .start:hover { color: green }
         .start span { position: relative; z-index: 1 }
         #board {
-            width: 1800px;
-            height: 940px;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
             border: 4px solid;
             position: relative;
-            background-image: url(space.png)
+            background-image: url(space.png);
         }
         #ui {
             position: absolute;
             top: 10px;
             left: 10px;
-            width: 300px;
-            padding: 10px;
-            background: rgba(0,0,0,0.6);
+            width: 320px;
+            padding: 12px;
+
+            background: rgba(0,0,0,0.65);
             color: white;
-            border-radius: 10px;
-            z-index: 10
+            border-radius: 12px;
+
+            border: 1px solid rgba(0,255,171,0.3);
+            backdrop-filter: blur(6px);
+
+            z-index: 10;
         }
         #inventory {
             display: flex;
@@ -130,7 +135,7 @@
             align-items: center;
             justify-content: center
         }
-        #screen {
+        #screen{
             width: 2000px;
             height: 2000px;
             position: absolute;
@@ -148,6 +153,7 @@
             text-align: center;
             line-height: 50px
         }
+       
         .item {
             width: 40px;
             height: 40px;
@@ -187,11 +193,119 @@
             height: 100px;
             position: absolute
         }
-        .wall {
+        .wall{
             position: absolute;
             background: rgba(0,0,0,0.95);
             border: 2px solid #00ffab;
         }
+        .pic{
+            position:absolute;
+        }
+        #progressbarContainer {
+            width: 100%;
+            height: 26px;
+            margin-top: 12px;
+
+            background: rgba(0,0,0,0.75);
+            border: 2px solid #00ffab;
+            box-shadow: 0 0 10px rgba(0,255,171,0.4);
+
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transform: none; /* important: keeps it inside UI flow */
+        }
+
+        #progressbar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0%;
+            height: 100%;
+
+            background: linear-gradient(90deg, #00ffab, #00b3ff);
+
+            box-shadow:
+                inset 0 0 8px rgba(255,255,255,0.2),
+                0 0 10px #00ffab;
+
+            transition: width 0.3s linear;
+        }
+
+        #counter {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+
+            color: #ffffff;
+            text-shadow:
+                0 0 4px #000,
+                0 0 6px #00ffab;
+
+            pointer-events: none;
+            z-index: 2;
+        }
+        #floor{
+            width: 6000px;
+            height: 1800px;
+        }
+        #floor2{
+            transform: translateY(2000px);
+            width: 2600px;
+            height: 2400px;
+        }
+        #floor3{
+            transform:translateY(4800px);
+            width: 2600px;
+            height: 2200px;
+        }
+        #floor4{
+            transform:  translateX(3400px) translateY(2000px);
+            width: 2600px;
+            height: 2400px;
+        }
+        #floor5{
+            transform:  translateX(3400px) translateY(4800px);
+            width: 2600px;
+            height: 2200px;
+        }
+        #floor6{
+            transform: translateY(7200px);
+            width: 6000px;
+            height: 800px;
+        }
+        #hallway{
+            transform:translateY(1800px);
+            width: 6000px;
+            height: 5400px;
+        }
+
+
+        #darkness{
+            position:absolute;
+            inset:0;
+            pointer-events:none;
+            opacity:0;
+            transition:opacity .4s;
+            z-index:9;
+
+
+            background:
+            radial-gradient(circle,transparent 0px,rgba(0,0,0,0.25) 120px,rgba(0,0,0,0.97) 280px);
+        }
+        #darkness.active{
+            opacity:1;
+        }
+
+
     </style>
 </head>
 <body>
@@ -208,15 +322,36 @@
         <button class="start" id="startBtn"><span>Start</span></button>
     </div>
 
+
     <div id="board">
+
+
         <div id="ui">
             <div id="inventory"></div>
+            <div id="progressbarContainer">
+                <div id="progressbar"></div>
+                <div id="counter">15:00</div>
+            </div>
         </div>
+    <div id="darkness"></div>
+
 
         <div id="screen">
-            <div id="light"></div>
+
+
+            <img class="pic" src="download (2).jpg" id="hallway">
+            <img class="pic" src="download.jpg" id="floor">
+            <img class="pic" src="download (1).jpg" id="floor2">
+            <img class="pic" src="astronaut-4106766_1280.jpg" id="floor3">
+            <img class="pic" src="Arizona-map-L.jpg" id="floor4">
+            <img class="pic" src="watch this.jpg" id="floor5">
+            <img class="pic" src="sword.png" id="floor6">
+
+
             <div id="player">Me</div>
 
+
+            <div id="light"></div>
             <div id="item" class="item">Key1G</div>
             <div id="item2" class="item">Key2B</div>
             <div id="item3" class="item">Key3O</div>
@@ -224,19 +359,26 @@
             <div id="item6" class="item">testYellow</div>
             <div id="item5" class="item">light</div>
 
+
             <div class="secret" style="left:300px;top:300px">You found Me lil bro</div>
             <div class="secret" style="left:1200px;top:400px">The trustworthy</div>
+
 
             <div id="blueDoor" class="door">Closed</div>
             <div id="greenDoor" class="door">Closed</div>
             <div id="orangeDoor" class="door">Closed</div>
             <div id="PurpleDoor" class="door">Closed</div>
 
+
             <div class="wall" id="wall1"></div>
             <div class="wall" id="wall2"></div>
             <div class="wall" id="wall3"></div>
+           
+
+
         </div>
     </div>
+
 
     <script>
         let startScreen = document.getElementById('startScreen')
@@ -247,6 +389,16 @@
         let on = false
         let secrets = document.querySelectorAll(".secret")
         document.getElementById("startBtn").addEventListener("click", startGame)
+        let floor = document.getElementById("pic")
+        let progressbar = document.getElementById("progressbar")
+        let counter = document.getElementById("counter")
+        let darkness = document.getElementById("darkness")
+        let floor2 = document.getElementById("floor2")
+
+
+        let totalTime = 15 * 60 * 1000
+        let startTime = 0
+
 
         let x = 100
         let y = 100
@@ -260,14 +412,17 @@
         let running = false
         let view = false
 
+
         function showToast(message) {
             console.log(message)
         }
+
 
         let noclip = false
         let debug = true
         let mouseX = 0
         let mouseY = 0
+
 
         document.addEventListener("keydown", (e) => {
             keys[e.key] = true
@@ -288,7 +443,9 @@
             }
         })
 
+
         document.addEventListener("keyup", (e) => keys[e.key] = false)
+
 
         document.getElementById("screen").addEventListener("mousemove", (e) => {
             let rect = screen.getBoundingClientRect()
@@ -296,12 +453,14 @@
             mouseY = Math.floor(e.clientY - rect.top)
         })
 
+
         let doors = [
             { dor: document.getElementById("blueDoor"), x: 2000, y: 1000, type: "blue", unlocked: false },
             { dor: document.getElementById("orangeDoor"), x: 1500, y: 1000, type: "orange", unlocked: false },
             { dor: document.getElementById("PurpleDoor"), x: 1000, y: 1000, type: "purple", unlocked: false },
             { dor: document.getElementById("greenDoor"), x: 500, y: 1000, type: "green", unlocked: false }
         ]
+
 
         let items = [
             { item: document.getElementById("item"), x: 2000, y: 900, picked: false, type: "green" },
@@ -312,7 +471,9 @@
             { item: document.getElementById("item6"), x: 630, y: 1200, picked: false, type: "yellow" }
         ]
 
+
         let walls = []
+
 
         function add(x, y, w, h, color) {
             let div = document.createElement("div")
@@ -322,6 +483,7 @@
             screen.appendChild(div)
             walls.push({ wall: div, x, y, w, h })
         }
+
 
         const W = 6000
         const H = 8000
@@ -335,17 +497,20 @@
         add(0, 0, t, H,)
         add(W - t, 0, t, H,)
 
+
         //Organized like this
         //top part
         //side part back
         //bootom part
         //side front top
-        //side front bottom 
+        //side front bottom
+
 
         // TOP RED
         add(t, t, W - t * 2, t, "red")
         add(t, t, t, 1800, "red")
         add(W - t, t, t, 1800, "red")
+
 
         const topDoor = 600
         add(t, 1800, center - topDoor / 2 - t, t, "red")
@@ -359,12 +524,14 @@
         // add(2600,2000,t,1400,"yellow")
         // add(2600,3400,t,1200,"yellow")
 
+
         //top purple
         add(3400, 2000, 2600, t, "purple")
         add(W - t, 2000, t, 2400, "purple")
         add(3400, 4400, 2600, t, "purple")
         add(3400, 2000, t, 900, "purple")
         add(3400, 3100, t, 1300, "purple")
+
 
         //bottom yellow
         add(t, 4800, 2600, t, "yellow")
@@ -373,31 +540,63 @@
         add(2600, 4800, t, 900, "yellow")
         add(2600, 5900, t, 1100, "yellow")
 
+
         //bottom purple
         add(3400, 4800, 2600, t, "purple")
         add(W - t, 5000, t, 2000, "purple")
         add(3400, 7000, 2600, t, "purple")
         add(3400, 4800, t, 900, "purple")
 
+
         add(3400, 5900, t, 1100, "purple")
+
 
         //bottom lime
         add(t, H - t, W - t * 2, t, "lime")
         add(t, 7200, t, H - 7200, "lime")
         add(W - t, 7200, t, H - 7200, "lime")
 
+
         const bottomDoor = 400
         add(t, 7200, center - bottomDoor / 2 - t, t, "lime")
         add(center + bottomDoor / 2, 7200, W - (center + bottomDoor / 2) - t, t, "lime")
+
 
         walls.slice(-4).forEach((w) => {
             w.wall.className = "wall"
             screen.appendChild(w.wall)
         })
 
+
+
+
+
+
+        function darknessefect(){
+            let fx = floor2.offsetLeft
+            let fy = floor2.offsetTop + 2000
+            let fw = floor2.offsetWidth
+            let fh = floor2.offsetHeight
+
+
+            console.log(floor2.getBoundingClientRect())
+
+
+            console.log(fx, fy, fw, fh) // 0 0 1000 1840
+            console.log(x, y) // 650 2550
+            return (
+                x < (fx + fw) && // true
+                x + 50 > fx && // true
+                y < (fy + fh) && //
+                y + 50 > fy
+            )
+        }
+
+
         function colliding(item) {
             return x < item.x + 40 && x + 50 > item.x && y < item.y + 40 && y + 50 > item.y
         }
+
 
         function locked(newX, newY) {
             return doors.some((dor) => {
@@ -406,6 +605,7 @@
             })
         }
 
+
         function blocked(newX, newY) {
             for (let w of walls) {
                 if (newX < w.x + w.w && newX + 50 > w.x && newY < w.y + w.h && newY + 50 > w.y) return true
@@ -413,9 +613,11 @@
             return false
         }
 
+
         function contact(dor) {
             return x < dor.x + 100 && x + 50 > dor.x && y < dor.y + 100 && y + 50 > dor.y
         }
+
 
         function adinventory(type) {
             if (!inventory[type]) {
@@ -432,18 +634,48 @@
             slotss[type].push(slot)
         }
 
-        function timer() {
-            if (!running) return
-            syringeCount++
-            const el = document.getElementById('syr' + syringeCount)
-            if (el) el.classList.add('filled')
-            if (syringeCount >= 6) {
-                clearInterval(syringeInterval)
-            } else {
-                showToast(`⚠ SYRINGE ${syringeCount}/6 INJECTED — ${6 - syringeCount} REMAINING`)
-            }
+
+    function baaar(){
+        if (!running) return
+        const elapsed = Date.now() - startTime;
+        let progress = (elapsed / totalTime) * 100;
+
+
+        if(progress > 100) progress = 100;
+
+
+        progressbar.style.width = progress + "%";
+
+
+        if(progress >= 50 && progress < 80){
+            progressbar.style.background = "linear-gradient(90deg, #ffb300, #ff6a00)";
+            counter.style.color = "#ffb300";
+            counter.style.textShadow = "0 0 10px #ffb300";
+        } else if(progress >= 80){
+            progressbar.style.background = "linear-gradient(90deg, #ff003c, #ff7b00)";
+            counter.style.color = "#ff003c";
+            counter.style.textShadow = "0 0 12px #ff003c";
         }
 
+
+        let remaining = totalTime - elapsed;
+        if(remaining < 0) remaining = 0;
+
+
+        let minutes = Math.floor(remaining / 60000);
+        let seconds = Math.floor((remaining % 60000) / 1000);
+
+
+        counter.innerText =
+            `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+
+        if(running && progress < 100){
+            setTimeout(baaar, 1000);
+        } else {
+            counter.innerText = "COMPLETE";
+        }
+    }
         const MapX = 6000
         const MapY = 8000
         screen.style.width = MapX + "px"
@@ -451,21 +683,25 @@
         const maxX = MapX - 50
         const maxY = MapY - 50
 
+
         function move() {
             if (!running) return
             let speed = keys["Shift"] ? 40 : 10
             let newX = x
             let newY = y
 
+
             if (keys["ArrowUp"] || keys["w"]) newY -= speed
             if (keys["ArrowDown"] || keys["s"]) newY += speed
             if (keys["ArrowLeft"] || keys["a"]) newX -= speed
             if (keys["ArrowRight"] || keys["d"]) newX += speed
 
+
             if (newX < 0) newX = 0
             if (newY < 0) newY = 0
             if (newX > maxX) newX = maxX
             if (newY > maxY) newY = maxY
+
 
             walls.forEach((w) => {
                 w.wall.style.left = w.x + "px"
@@ -473,6 +709,7 @@
                 w.wall.style.width = w.w + "px"
                 w.wall.style.height = w.h + "px"
             })
+
 
             if (!noclip) {
                 if (!locked(newX, newY) && !blocked(newX, newY)) {
@@ -484,8 +721,25 @@
                 y = newY
             }
 
+
             player.style.left = x + "px"
             player.style.top = y + "px"
+
+
+            walls.forEach(w=>{
+                w.wall.style.left = w.x + "px"
+                w.wall.style.top = w.y + "px"
+                w.wall.style.width = w.w + "px"
+                w.wall.style.height = w.h + "px"
+            })
+
+
+            let camX = (window.innerWidth / 2) - x - 25
+            let camY = (window.innerHeight / 2) - y - 25
+
+            screen.style.left = camX + "px"
+            screen.style.top = camY + "px"
+
 
             if (!view) {
                 screen.style.transform = "scale(1)"
@@ -497,6 +751,7 @@
                 screen.style.transform = "scale(0.25)"
                 screen.style.transformOrigin = "0 0"
             }
+
 
             if (debug) {
                 let ui = document.getElementById("ui")
@@ -512,21 +767,26 @@
                 debug.textContent = `${noclip}`
             }
 
+
             if (!locked(newX, newY) && !blocked(newX, newY)) {
                 x = newX
                 y = newY
             }
 
+
             player.style.left = x + "px"
             player.style.top = y + "px"
 
+
             screen.style.left = 1000 - x + "px"
             screen.style.top = 500 - y + "px"
+
 
             if (keys["x"]) {
                 keys["x"] = false
                 if (inventory["light"] > 0) on = !on
             }
+
 
             if (keys["q"]) {
                 keys["q"] = false
@@ -548,14 +808,17 @@
                 }
             }
 
+
             if (on) {
                 light.style.display = "block"
                 light.style.left = x - 35 + "px"
                 light.style.top = y - 35 + "px"
 
+
                 let ax = x
                 let ay = y
                 let lightSize = 120
+
 
                 secrets.forEach((sec) => {
                     let sx = sec.offsetLeft
@@ -576,6 +839,7 @@
                     sec.style.textShadow = "none"
                 })
             }
+
 
             items.forEach((item) => {
                 if (!item.picked) {
@@ -599,14 +863,17 @@
                 }
             })
 
+
             doors.forEach((dor) => {
                 dor.dor.style.left = dor.x + "px"
                 dor.dor.style.top = dor.y + "px"
+
 
                 if (!dor.unlocked && contact(dor) && inventory[dor.type] && keys[" "]) {
                     dor.unlocked = true
                     dor.dor.style.backgroundColor = "red"
                     dor.dor.textContent = "Opened"
+
 
                     let slot = document.querySelector(`#${dor.type}`)
                     inventoryUI.removeChild(slot)
@@ -615,13 +882,36 @@
                     order.shift()
                 }
             })
+                if (darknessefect()) {
+                  darkness.classList.add("active")
+
+                  // center of viewport/player
+                  let px = 1030
+                  let py = 500
+
+                  darkness.style.background =
+                  `radial-gradient(
+                      circle at ${px}px ${py}px,
+                      transparent 0px,
+                      rgba(0,0,0,0.2) 120px,
+                      rgba(0,0,0,0.98) 300px
+                  )`
+
+              }else {
+                  darkness.classList.remove("active")
+              }
+
+
+
 
             requestAnimationFrame(move)
         }
 
+
         (() => {
             const screen = document.getElementById("screen")
             const ui = document.getElementById("ui")
+
 
             let info = document.createElement("div")
             info.style.marginTop = "10px"
@@ -630,14 +920,17 @@
             info.style.fontSize = "14px"
             ui.appendChild(info)
 
+
             let mouseX = 0
             let mouseY = 0
             let wallStart = null
+
 
             screen.addEventListener("mousedown", (e) => {
                 let rect = screen.getBoundingClientRect()
                 let cx = Math.floor(e.clientX - rect.left)
                 let cy = Math.floor(e.clientY - rect.top)
+
 
                 if (!wallStart) {
                     wallStart = { x: cx, y: cy }
@@ -652,9 +945,11 @@
                 }
             })
 
+
             let startX = 0
             let startY = 0
             let setStart = true
+
 
             screen.addEventListener("mousemove", (e) => {
                 let rect = screen.getBoundingClientRect()
@@ -667,11 +962,13 @@
                 }
             })
 
+
             function update() {
                 let x = Math.min(startX, mouseX)
                 let y = Math.min(startY, mouseY)
                 let w = Math.abs(mouseX - startX)
                 let h = Math.abs(mouseY - startY)
+
 
                 info.textContent = "LIVE WALL COORDS (AUTO)\n\nMouse X: " + mouseX + "\nMouse Y: " + mouseY + "\n\nX: " + x + "\nY: " + y + "\nW: " + w + "\nH: " + h + "\n\n(Starts from first mouse position)"
                 requestAnimationFrame(update)
@@ -679,12 +976,17 @@
             update()
         })()
 
-        move()
 
         function startGame() {
             startScreen.classList.add('hidden')
             running = true
+            startTime = Date.now()
+
+
             requestAnimationFrame(move)
+            baaar()
+
+
         }
     </script>
 </body>
