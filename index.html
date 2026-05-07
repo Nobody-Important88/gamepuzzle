@@ -194,8 +194,6 @@
             border: 2px solid #00ffab;
         }
         .pic{
-            width:100%;
-            height:23%;
             position:absolute;
         }
         #progressbarContainer {
@@ -235,22 +233,55 @@
             pointer-events: none;
             z-index: 2;
         }
-        /* #floor2{
+        #floor{
+            width: 6000px;
+            height: 1800px;
+        } 
+        #floor2{
             transform: translateY(2000px);
             width: 2600px;
             height: 2400px;
-        } */
+        }
         #floor3{
-            transform: translateX(-1000px);
-            transform: translateY(2000px);
-            width: 1000px;
+            transform:translateY(4800px);
+            width: 2600px;
+            height: 2200px;
         }
-        /* #floor4{
-            transform: translateY(2000px);
-            width: 1000px;
+        #floor4{
+            transform:  translateX(3400px) translateY(2000px);
+            width: 2600px;
+            height: 2400px;
         }
- */
+        #floor5{
+            transform:  translateX(3400px) translateY(4800px);
+            width: 2600px;
+            height: 2200px;
+        }
+        #floor6{
+            transform: translateY(7200px);
+            width: 6000px;
+            height: 800px;
+        }
+        #hallway{
+            transform:translateY(1800px);
+            width: 6000px;
+            height: 5400px;
+        }
 
+        #darkness{
+            position:absolute;
+            inset:0;
+            pointer-events:none;
+            opacity:0;
+            transition:opacity .4s;
+            z-index:9;
+
+            background:
+            radial-gradient(circle,transparent 0px,rgba(0,0,0,0.25) 120px,rgba(0,0,0,0.97) 280px);
+        }
+        #darkness.active{
+            opacity:1;
+        }
 
     </style>
 </head>
@@ -269,6 +300,7 @@
     </div>
 
     <div id="board">
+
         <div id="ui">
             <div id="inventory"></div>
             <div id="progressbarContainer">
@@ -276,15 +308,20 @@
                 <div id="counter">15:00</div>
             </div>
         </div>
+    <div id="darkness"></div>
+
         <div id="screen">
-            
-            <img class="pic" src="Untitled.png" id="floor">
+
+            <img class="pic" src="download (2).jpg" id="hallway">
+            <img class="pic" src="download.jpg" id="floor">
             <img class="pic" src="download (1).jpg" id="floor2">
             <img class="pic" src="astronaut-4106766_1280.jpg" id="floor3">
             <img class="pic" src="Arizona-map-L.jpg" id="floor4">
-            <img class="pic" src="download (2).jpg" id="hallway">
-            <img class="pic" src="download.jpg" id="kitty">
+            <img class="pic" src="watch this.jpg" id="floor5">
+            <img class="pic" src="sword.png" id="floor6">
+
             <div id="player">Me</div>
+
             <div id="light"></div>
             <div id="item" class="item">Key1G</div>
             <div id="item2" class="item">Key2B</div>
@@ -305,7 +342,6 @@
             <div class="wall" id="wall2"></div>
             <div class="wall" id="wall3"></div>
             
-            
 
         </div>
     </div>
@@ -322,6 +358,9 @@
         let floor = document.getElementById("pic")
         let progressbar = document.getElementById("progressbar")
         let counter = document.getElementById("counter")
+        let darkness = document.getElementById("darkness")
+        let floor2 = document.getElementById("floor2")
+
         let totalTime = 15 * 60 * 1000
         let startTime = 0
 
@@ -474,6 +513,23 @@
 
 
 
+        function darknessefect(){
+            let fx = floor2.offsetLeft
+            let fy = floor2.offsetTop + 2000
+            let fw = floor2.offsetWidth
+            let fh = floor2.offsetHeight
+
+            console.log(floor2.getBoundingClientRect())
+
+            console.log(fx, fy, fw, fh) // 0 0 1000 1840
+            console.log(x, y) // 650 2550
+            return (
+                x < (fx + fw) && // true
+                x + 50 > fx && // true
+                y < (fy + fh) && // 
+                y + 50 > fy
+            )
+        }
 
         function colliding(item) {
             return x < item.x + 40 && x + 50 > item.x && y < item.y + 40 && y + 50 > item.y
@@ -728,6 +784,17 @@
                     order.shift()
                 }
             })
+                if(darknessefect()){
+                    darkness.classList.add("active")
+                    let px = 600
+                    let py = 350
+                    darkness.style.background =
+                    `radial-gradient(circle at ${px}px ${py}px, transparent 0px, rgba(0,0,0,0.2) 120px, rgba(0,0,0,0.98) 300px)`
+
+                }else{
+                    darkness.classList.remove("active")
+                }
+
 
             requestAnimationFrame(move)
         }
