@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Owl Maze Fixed</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:#111;
+}
+
+#screen{
+    width:2600px;
+    height:2400px;
+    position:absolute;
+    background:#1b1b1b;
+}
+
+#player{
+    width:40px;
+    height:40px;
+    background:lime;
+    border-radius:50%;
+    position:absolute;
+    z-index:5;
+}
+
+#goal{
+    width:50px;
+    height:50px;
+    background:red;
+    border-radius:50%;
+    position:absolute;
+    left:180px;
+    top:1980px;
+    z-index:4;
+}
+
+.wall{
+    position:absolute;
+    background:white;
+}
+</style>
+</head>
+
+<body>
+
+<div id="screen">
+    <div id="goal"></div>
+    <div id="player"></div>
+</div>
+
+<script>
+const screen = document.getElementById("screen")
+const player = document.getElementById("player")
+const goal = document.getElementById("goal")
+
+let x = 2150
+let y = 120
+
+const walls = []
+
+function add(x,y,w,h){
+    let d = document.createElement("div")
+
+    d.className = "wall"
+    d.style.left = x + "px"
+    d.style.top = y + "px"
+    d.style.width = w + "px"
+    d.style.height = h + "px"
+
+    screen.appendChild(d)
+
+    walls.push({x,y,w,h})
+}
+
+const s = 20
+
+// =========================
+// OUTER BORDER
+// =========================
+add(100,100,1800,s)
+add(2100,100,200,s)
+
+add(100,2100,2200,s)
+
+add(100,100,s,2000)
+add(2280,100,s,2000)
+
+// =========================
+// MAIN MAZE
+// =========================
+
+// top maze
+add(400,350,1880,s)
+
+add(400,350,s,700)
+add(900,350,s,1200)
+
+add(1300,600,700,s)
+add(1300,600,s,1000)
+
+add(1600,900,680,s)
+
+add(1300,1150,700,s)
+
+add(1850,1150,s,500)
+add(2000,1450,280,s)
+
+// left side turns
+add(100,1250,550,s)
+
+add(350,1500,550,s)
+
+add(350,750,300,s)
+add(650,750,s,500)
+
+// center divider
+add(1000,1550,600,s)
+
+add(1550,1550,s,450)
+
+add(1200,1900,900,s)
+
+// lower-left section
+add(100,1750,1000,s)
+
+add(900,1750,s,350)
+
+add(350,1900,350,s)
+
+add(650,1900,s,400)
+
+add(100,1950,250,s)
+
+// fake dead-end branches
+add(1750,1700,350,s)
+
+add(1750,1300,s,250)
+
+add(1450,1700,s,250)
+
+add(500,1200,250,s)
+
+// extra challenge paths
+add(700,1000,400,s)
+
+add(700,1000,s,300)
+
+add(700,1300,250,s)
+
+add(1150,750,300,s)
+
+// =========================
+// CONTROLS
+// =========================
+let keysDown = {}
+
+document.addEventListener("keydown", e=>{
+    keysDown[e.key.toLowerCase()] = true
+})
+
+document.addEventListener("keyup", e=>{
+    keysDown[e.key.toLowerCase()] = false
+})
+
+function collides(nx, ny){
+    return walls.some(w =>
+        nx < w.x + w.w &&
+        nx + 40 > w.x &&
+        ny < w.y + w.h &&
+        ny + 40 > w.y
+    )
+}
+
+function checkGoal(){
+    const gx = 180
+    const gy = 1980
+
+    if(
+        x < gx + 50 &&
+        x + 40 > gx &&
+        y < gy + 50 &&
+        y + 40 > gy
+    ){
+        alert("You found the mouse!")
+        x = 2150
+        y = 120
+    }
+}
+
+function loop(){
+
+    let speed = 5
+    let nx = x
+    let ny = y
+
+    if(keysDown["w"]) ny -= speed
+    if(keysDown["s"]) ny += speed
+    if(keysDown["a"]) nx -= speed
+    if(keysDown["d"]) nx += speed
+
+    if(!collides(nx, ny)){
+        x = nx
+        y = ny
+    }
+
+    player.style.left = x + "px"
+    player.style.top = y + "px"
+
+    checkGoal()
+
+    requestAnimationFrame(loop)
+}
+
+loop()
+</script>
+
+</body>
+</html>
