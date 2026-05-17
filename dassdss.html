@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Printable Style Maze</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:#dcdcdc;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+#game{
+    width:900px;
+    height:900px;
+    position:relative;
+    background:#efefef;
+    overflow:hidden;
+}
+
+.wall{
+    position:absolute;
+    background:black;
+}
+
+#player{
+    width:26px;
+    height:26px;
+    background:limegreen;
+    border-radius:50%;
+    position:absolute;
+    z-index:10;
+}
+
+#goal{
+    width:34px;
+    height:34px;
+    background:red;
+    border-radius:50%;
+    position:absolute;
+    z-index:10;
+}
+
+.arrow{
+    position:absolute;
+    font-size:70px;
+    font-weight:bold;
+    z-index:20;
+    color:black;
+}
+
+#topArrow{
+    top:-40px;
+    left:418px;
+}
+
+#bottomArrow{
+    bottom:-40px;
+    left:418px;
+}
+
+#info{
+    position:fixed;
+    top:10px;
+    left:10px;
+    background:black;
+    color:white;
+    padding:10px 14px;
+    border-radius:8px;
+    z-index:100;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="info">
+WASD / Arrow Keys
+</div>
+
+<div id="game">
+
+    <div class="arrow" id="topArrow">⬇</div>
+    <div class="arrow" id="bottomArrow">⬇</div>
+
+    <div id="player"></div>
+    <div id="goal"></div>
+
+</div>
+
+<script>
+
+const game = document.getElementById("game")
+const player = document.getElementById("player")
+const goal = document.getElementById("goal")
+
+let walls = []
+
+function wall(x,y,w,h){
+
+    let div = document.createElement("div")
+
+    div.className = "wall"
+
+    div.style.left = x + "px"
+    div.style.top = y + "px"
+
+    div.style.width = w + "px"
+    div.style.height = h + "px"
+
+    game.appendChild(div)
+
+    walls.push({x,y,w,h})
+}
+
+// ============================
+// OUTER BORDER
+// ============================
+
+const t = 8
+
+wall(40,40,820,t)
+wall(40,40,t,820)
+wall(40,852,820,t)
+wall(852,40,t,820)
+
+// ============================
+// MAZE
+// (made to closely match image)
+// ============================
+
+// top
+wall(120,120,120,t)
+wall(320,120,t,120)
+wall(520,120,120,t)
+wall(720,120,120,t)
+
+// row 2
+wall(40,220,60,t)
+wall(160,120,t,100)
+wall(160,220,160,t)
+
+wall(320,220,120,t)
+wall(440,120,t,100)
+
+wall(520,220,120,t)
+wall(640,120,t,100)
+
+wall(720,220,100,t)
+wall(820,120,t,100)
+
+// middle left
+wall(120,320,200,t)
+wall(320,220,t,100)
+
+wall(320,320,120,t)
+
+wall(440,320,t,120)
+
+wall(520,320,160,t)
+wall(680,220,t,200)
+
+wall(760,320,t,120)
+
+// center
+wall(120,420,120,t)
+wall(240,420,120,t)
+
+wall(360,320,t,140)
+
+wall(440,460,200,t)
+
+wall(680,420,80,t)
+
+wall(760,420,100,t)
+
+// left lower
+wall(120,520,t,120)
+
+wall(120,640,240,t)
+
+wall(360,420,t,220)
+
+// center lower
+wall(440,560,t,180)
+
+wall(520,640,120,t)
+
+wall(640,520,t,160)
+
+wall(760,520,100,t)
+
+// bottom middle
+wall(40,740,160,t)
+
+wall(240,640,t,120)
+
+wall(360,740,120,t)
+
+wall(520,740,t,120)
+
+wall(600,740,80,t)
+
+wall(760,640,t,200)
+
+// lower left
+wall(120,780,t,100)
+
+wall(200,820,120,t)
+
+wall(320,740,t,140)
+
+// lower right
+wall(440,820,120,t)
+
+wall(560,740,t,180)
+
+wall(680,820,180,t)
+
+// ============================
+// PLAYER
+// ============================
+
+let x = 430
+let y = 50
+
+player.style.left = x + "px"
+player.style.top = y + "px"
+
+// ============================
+// GOAL
+// ============================
+
+goal.style.left = "430px"
+goal.style.top = "810px"
+
+// ============================
+// INPUT
+// ============================
+
+let keys = {}
+
+document.addEventListener("keydown",(e)=>{
+    keys[e.key.toLowerCase()] = true
+})
+
+document.addEventListener("keyup",(e)=>{
+    keys[e.key.toLowerCase()] = false
+})
+
+// ============================
+// COLLISION
+// ============================
+
+function blocked(nx,ny){
+
+    for(let w of walls){
+
+        if(
+            nx < w.x + w.w &&
+            nx + 26 > w.x &&
+            ny < w.y + w.h &&
+            ny + 26 > w.y
+        ){
+            return true
+        }
+    }
+
+    return false
+}
+
+// ============================
+// GAME LOOP
+// ============================
+
+function loop(){
+
+    let speed = 4
+
+    let nx = x
+    let ny = y
+
+    if(keys["w"] || keys["arrowup"]) ny -= speed
+    if(keys["s"] || keys["arrowdown"]) ny += speed
+    if(keys["a"] || keys["arrowleft"]) nx -= speed
+    if(keys["d"] || keys["arrowright"]) nx += speed
+
+    if(!blocked(nx,ny)){
+        x = nx
+        y = ny
+    }
+
+    player.style.left = x + "px"
+    player.style.top = y + "px"
+
+    // win
+    if(
+        x < 430 + 34 &&
+        x + 26 > 430 &&
+        y < 810 + 34 &&
+        y + 26 > 810
+    ){
+        alert("YOU ESCAPED!")
+        location.reload()
+    }
+
+    requestAnimationFrame(loop)
+}
+
+loop()
+
+</script>
+
+</body>
+</html>

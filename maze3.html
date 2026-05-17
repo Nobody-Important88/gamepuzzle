@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Editor Mode</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    font-family:Arial;
+}
+
+#screen{
+    width:2600px;
+    height:2400px;
+    position:absolute;
+    background:#111;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:50px 50px;
+    margin: 100px;
+}
+
+#player{
+    width:50px;
+    height:50px;
+    background:lime;
+    position:absolute;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+.wall{
+    position:absolute;
+    border:2px solid rgba(255,255,255,0.25);
+    background:rgb(13, 15, 41);
+}
+
+#goal{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:red;
+    position:absolute;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="screen">
+    <div id="goal">EXIT</div>
+    <div id="player">ME</div>
+</div>
+
+<script>
+
+let screen = document.getElementById("screen")
+let player = document.getElementById("player")
+let goal = document.getElementById("goal")
+
+let x = 100
+let y = 100
+
+let keys = {}
+let noclip = false
+let mapView = true
+
+let walls = []
+
+document.addEventListener("keydown",(e)=>{
+    keys[e.key] = true
+
+    if(e.key.toLowerCase() === "m"){
+        mapView = !mapView
+    }
+
+    if(e.key.toLowerCase() === "h"){
+        noclip = !noclip
+    }
+})
+
+document.addEventListener("keyup",(e)=>{
+    keys[e.key] = false
+})
+
+/* =========================
+   WALL SYSTEM (NO IDS / NO COLORS)
+========================= */
+
+function add(x,y,w,h){
+
+    let div = document.createElement("div")
+    div.className = "wall"
+
+    div.style.left = x + "px"
+    div.style.top = y + "px"
+    div.style.width = w + "px"
+    div.style.height = h + "px"
+
+    screen.appendChild(div)
+
+    walls.push({
+        x,y,w,h,
+        el:div
+    })
+}
+
+function blocked(nx,ny){
+    for(let w of walls){
+        if(
+            nx < w.x + w.w &&
+            nx + 50 > w.x &&
+            ny < w.y + w.h &&
+            ny + 50 > w.y
+        ){
+            return true
+        }
+    }
+    return false
+}
+
+/* =========================
+   MAZE SYSTEM
+========================= */
+
+let mx = 0
+let my = 0
+
+let mazeWidth = 2600
+let mazeHeight = 2400
+
+let originalWidth = 836
+let originalHeight = 836
+
+let scaleX = mazeWidth / originalWidth
+let scaleY = mazeHeight / originalHeight
+
+function maze(x,y,w,h){
+    add(
+        mx + x * scaleX,
+        my + y * scaleY,
+        w * scaleX + 1,
+        h * scaleY + 1
+    )
+}
+
+let s = 24
+
+/* ================= WALLS ================= */
+
+// TOP
+maze(1,80,90,s)
+maze(120,0,s,200)
+maze(120,240,s,60)
+maze(120,120,160,s)
+maze(280,55,200,s)
+maze(400,55,s,190)
+maze(260,180,340,s)
+maze(550,150,s,100)
+maze(550,0,s,100)
+maze(640,120,100,s)
+maze(780,50,55,s)
+maze(640,0,s,130)
+maze(720,30,s,210)
+maze(780,30,s,210)
+
+// CENTER LEFT
+maze(30,280,220,s)
+maze(280,180,s,100)
+maze(130,280,s,120)
+maze(280,280,120,s)
+maze(400,280,s,150)
+maze(480,280,160,s)
+maze(450,350,160,s)
+maze(640,180,s,200)
+maze(720,280,s,120)
+
+// CENTER
+maze(80,380,210,s)
+maze(200,440,140,s)
+maze(130,500,160,s)
+maze(150,400,s,170)
+maze(400,420,200,s)
+maze(640,380,104,s)
+maze(720,280,115,s)
+
+// LOWER LEFT
+maze(80,460,s,140)
+maze(0,380,s,140)
+maze(80,600,264,s)
+maze(320,290,s,320)
+
+// LOWER CENTER
+maze(400,500,s,220)
+maze(480,560,120,s)
+maze(576,504,s,120)
+maze(576,420,s,50)
+maze(640,440,s,50)
+maze(720,450,115,s)
+maze(600,520,145,s)
+maze(720,620,80,s)
+
+// BOTTOM
+maze(0,660,160,s)
+maze(0,740,160,s)
+maze(220,560,s,160)
+maze(280,700,144,s)
+maze(320,550,100,s)
+maze(400,650,100,s)
+maze(400,700,s,110)
+maze(480,700,s,110)
+maze(520,726,200,s)
+maze(560,650,80,s)
+maze(780,460,s,220)
+maze(660,550,s,200)
+
+// BOTTOM LEFT
+maze(80,740,s,70)
+maze(160,810,120,s)
+maze(280,700,s,135)
+
+// BOTTOM RIGHT
+maze(400,787,120,s)
+maze(520,651,s,160)
+maze(580,660,s,114)
+maze(580,805,s,30)
+maze(640,750,160,s)
+maze(635,810,200,s)
+
+goal.style.left = "1070px"
+goal.style.top = "2130px"
+
+/* =========================
+   MOVEMENT
+========================= */
+
+function move(){
+
+    let speed = keys["Shift"] ? 20 : 8
+
+    let nx = x
+    let ny = y
+
+    if(keys["w"]||keys["ArrowUp"]) ny -= speed
+    if(keys["s"]||keys["ArrowDown"]) ny += speed
+    if(keys["a"]||keys["ArrowLeft"]) nx -= speed
+    if(keys["d"]||keys["ArrowRight"]) nx += speed
+
+    if(noclip){
+        x = nx
+        y = ny
+    }else if(!blocked(nx,ny)){
+        x = nx
+        y = ny
+    }
+
+    player.style.left = x + "px"
+    player.style.top = y + "px"
+
+    if(mapView){
+        screen.style.transform = "scale(0.35)"
+        screen.style.transformOrigin = "0 0"
+        screen.style.left = "0px"
+        screen.style.top = "0px"
+    }else{
+        screen.style.transform = "scale(1)"
+        screen.style.left = (window.innerWidth/2 - x - 25) + "px"
+        screen.style.top = (window.innerHeight/2 - y - 25) + "px"
+    }
+
+    requestAnimationFrame(move)
+}
+
+move()
+
+</script>
+
+</body>
+</html>

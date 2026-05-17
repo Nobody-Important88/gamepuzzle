@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dual-Code Door System</title>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial;
+}
+
+#player {
+    width: 30px;
+    height: 30px;
+    background: blue;
+    position: absolute;
+    top: 100px;
+    left: 100px;
+}
+
+#door {
+    width: 50px;
+    height: 80px;
+    background: brown;
+    position: absolute;
+    top: 200px;
+    left: 300px;
+}
+
+#comboMenu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+#menuBox {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.codeBox {
+    width: 60px;
+    font-size: 22px;
+    text-align: center;
+    margin: 5px;
+    text-transform: uppercase;
+}
+</style>
+</head>
+
+<body>
+
+<div id="player"></div>
+<div id="door"></div>
+
+<div id="comboMenu">
+    <div id="menuBox">
+        <h3>Enter 4-Part Code (Letter + Number)</h3>
+
+        <input class="codeBox" maxlength="2" id="c1">
+        <input class="codeBox" maxlength="2" id="c2">
+        <input class="codeBox" maxlength="2" id="c3">
+        <input class="codeBox" maxlength="2" id="c4">
+
+        <br><br>
+
+        <button onclick="checkCombo()">Submit</button>
+        <button onclick="closeMenu()">Cancel</button>
+
+        <p id="result"></p>
+    </div>
+</div>
+
+<script>
+let player = document.getElementById("player")
+let door = document.getElementById("door")
+
+let x = 100
+let y = 100
+let speed = 10
+
+let menuOpen = false
+let correctCombo = ["A1", "A1", "A1", "A1"]
+
+document.addEventListener("keydown", (e) => {
+
+    if (menuOpen) return
+    if (document.activeElement.tagName === "INPUT") return
+
+    switch(e.key) {
+        case "ArrowUp": y -= speed; break
+        case "ArrowDown": y += speed; break
+        case "ArrowLeft": x -= speed; break
+        case "ArrowRight": x += speed; break
+    }
+
+    player.style.top = y + "px"
+    player.style.left = x + "px"
+
+    if (e.code === "Space") {
+        e.preventDefault()
+        if (nearDoor()) openMenu()
+    }
+})
+
+function nearDoor() {
+    let p = player.getBoundingClientRect()
+    let d = door.getBoundingClientRect()
+
+    let dist = Math.hypot(
+        (p.left + p.width/2) - (d.left + d.width/2),
+        (p.top + p.height/2) - (d.top + d.height/2)
+    )
+
+    return dist < 70
+}
+
+function openMenu() {
+    menuOpen = true
+    comboMenu.style.display = "flex"
+    result.innerText = ""
+
+    document.querySelectorAll(".codeBox").forEach(i => i.value = "")
+    c1.focus()
+}
+
+function closeMenu() {
+    menuOpen = false
+    comboMenu.style.display = "none"
+}
+
+document.querySelectorAll(".codeBox").forEach((box, index, arr) => {
+    box.addEventListener("input", () => {
+
+        box.value = box.value
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, "")
+            .slice(0,2)
+
+        if (box.value.length === 2 && index < arr.length - 1) {
+            arr[index + 1].focus()
+        }
+    })
+
+    box.addEventListener("keydown", (e) => {
+
+        if (e.key === "Backspace" && box.value === "" && index > 0) {
+            arr[index - 1].focus()
+        }
+    })
+})
+
+function checkCombo() {
+    let input = [
+        c1.value,
+        c2.value,
+        c3.value,
+        c4.value
+    ]
+
+    if (JSON.stringify(input) === JSON.stringify(correctCombo)) {
+        result.innerText = "Correct! Door unlocked."
+        door.style.background = "green"
+    } else {
+        result.innerText = "Wrong code!"
+    }
+}
+</script>
+
+</body>
+</html>

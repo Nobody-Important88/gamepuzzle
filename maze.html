@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Test</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    font-family:Arial;
+}
+
+#screen{
+    width:2600px;
+    height:2400px;
+    position:absolute;
+    background:#111;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:50px 50px;
+}
+
+#player{
+    width:50px;
+    height:50px;
+    background:lime;
+    position:absolute;
+    z-index:10;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:black;
+    font-weight:bold;
+}
+
+.wall{
+    position:absolute;
+    border:2px solid rgba(255,255,255,0.2);
+}
+
+#goal{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:red;
+    position:absolute;
+    z-index:5;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:white;
+    font-size:12px;
+    font-weight:bold;
+}
+
+#ui{
+    position:fixed;
+    top:10px;
+    left:10px;
+    background:rgba(0,0,0,0.7);
+    padding:12px;
+    color:white;
+    border:1px solid lime;
+    z-index:999;
+    width:240px;
+}
+
+</style>
+</head>
+<body>
+
+<div id="screen">
+    <div id="goal">EXIT</div>
+    <div id="player">ME</div>
+</div>
+
+<script>
+
+let screen = document.getElementById("screen")
+let player = document.getElementById("player")
+let goal = document.getElementById("goal")
+let debug = document.getElementById("debug")
+
+let x = 100
+let y = 100
+
+let keys = {}
+
+let noclip = false
+
+// IMPORTANT:
+// map starts ACTIVE now
+// press M to disable
+let mapView = true
+
+let walls = []
+
+document.addEventListener("keydown",(e)=>{
+
+    keys[e.key] = true
+
+    if(e.key.toLowerCase() === "m"){
+        mapView = !mapView
+    }
+
+    if(e.key.toLowerCase() === "h"){
+        noclip = !noclip
+    }
+
+})
+
+document.addEventListener("keyup",(e)=>{
+    keys[e.key] = false
+})
+
+function add(x,y,w,h,color){
+
+    let div = document.createElement("div")
+
+    div.className = "wall"
+
+    div.style.left = x + "px"
+    div.style.top = y + "px"
+
+    div.style.width = w + "px"
+    div.style.height = h + "px"
+
+    div.style.background = color
+
+    screen.appendChild(div)
+
+    walls.push({
+        x,
+        y,
+        w,
+        h
+    })
+}
+
+function blocked(newX,newY){
+
+    for(let w of walls){
+
+        if(
+            newX < w.x + w.w &&
+            newX + 50 > w.x &&
+            newY < w.y + w.h &&
+            newY + 50 > w.y
+        ){
+            return true
+        }
+
+    }
+
+    return false
+}
+
+/* ======================================================
+   MAZE ONLY
+====================================================== */
+
+let mx = 0
+let my = 0
+
+let mazeWidth = 2600
+let mazeHeight = 2400
+
+let originalWidth = 836
+let originalHeight = 836
+
+let scaleX = mazeWidth / originalWidth
+let scaleY = mazeHeight / originalHeight
+
+function maze(x,y,w,h,color){
+
+    add(
+        mx + x * scaleX,
+        my + y * scaleY,
+        w * scaleX + 1,
+        h * scaleY + 1,
+        color
+    )
+
+}
+
+let s = 24
+
+// OUTER WALLS
+
+add(0,0,2600,20,"white")
+add(0,0,20,2400,"white")
+add(0,2380,2600,20,"white")
+add(2580,0,20,2400,"white")
+
+// TOP
+maze(0,180,60,s,"orange")
+maze(120,80,s,100,"orange")
+maze(120,180,160,s,"orange")
+maze(280,180,120,s,"yellow")
+maze(400,80,s,100,"yellow")
+maze(480,180,120,s,"lime")
+maze(600,80,s,100,"lime")
+maze(680,180,100,s,"cyan")
+maze(780,80,s,100,"cyan")
+
+// CENTER LEFT
+maze(80,280,200,s,"blue")
+maze(280,180,s,100,"blue")
+maze(280,280,120,s,"purple")
+maze(400,280,s,120,"violet")
+maze(480,280,160,s,"deeppink")
+maze(640,180,s,200,"hotpink")
+maze(720,280,s,120,"red")
+
+// CENTER
+maze(80,380,120,s,"orange")
+maze(200,380,120,s,"yellow")
+maze(320,280,s,140,"lime")
+maze(400,420,200,s,"cyan")
+maze(640,380,80,s,"blue")
+maze(720,380,100,s,"purple")
+
+// LOWER LEFT
+maze(80,480,s,120,"violet")
+maze(80,600,240,s,"deeppink")
+maze(320,380,s,220,"hotpink")
+
+// LOWER CENTER
+maze(400,520,s,180,"red")
+maze(480,600,120,s,"orange")
+maze(600,480,s,160,"yellow")
+maze(720,480,100,s,"lime")
+
+// BOTTOM
+maze(0,700,160,s,"cyan")
+maze(200,600,s,120,"blue")
+maze(320,700,120,s,"purple")
+maze(480,700,s,120,"violet")
+maze(560,700,80,s,"deeppink")
+maze(720,600,s,200,"hotpink")
+
+// BOTTOM LEFT
+maze(80,740,s,100,"red")
+maze(160,780,120,s,"orange")
+maze(280,700,s,140,"yellow")
+
+// BOTTOM RIGHT
+maze(400,780,120,s,"lime")
+maze(520,700,s,180,"cyan")
+maze(640,780,180,s,"blue")
+
+goal.style.left = (mx + 1200) + "px"
+goal.style.top = (my + 2200) + "px"
+
+function move(){
+
+    let speed = keys["Shift"] ? 20 : 8
+
+    let newX = x
+    let newY = y
+
+    if(keys["w"] || keys["ArrowUp"]) newY -= speed
+    if(keys["s"] || keys["ArrowDown"]) newY += speed
+    if(keys["a"] || keys["ArrowLeft"]) newX -= speed
+    if(keys["d"] || keys["ArrowRight"]) newX += speed
+
+    if(!noclip){
+
+        if(!blocked(newX,newY)){
+            x = newX
+            y = newY
+        }
+
+    }else{
+
+        x = newX
+        y = newY
+
+    }
+
+    player.style.left = x + "px"
+    player.style.top = y + "px"
+
+    // MAP VIEW ACTIVE BY DEFAULT
+    if(mapView){
+
+        screen.style.transform = "scale(0.35)"
+        screen.style.transformOrigin = "0 0"
+
+        screen.style.left = "0px"
+        screen.style.top = "0px"
+
+    }else{
+
+        screen.style.transform = "scale(1)"
+
+        screen.style.left = (window.innerWidth/2 - x - 25) + "px"
+        screen.style.top = (window.innerHeight/2 - y - 25) + "px"
+
+    }
+        requestAnimationFrame(move)
+}
+
+move()
+
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>4x4 Puzzle x4</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f2f2f2;
+    overflow:hidden;
+    font-family:Arial;
+}
+
+#container{
+    display:flex;
+    gap:20px;
+}
+
+.game{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.board{
+    width:420px;
+    height:420px;
+    background:#222;
+    position:relative;
+}
+
+.preview{
+    width:120px;
+    height:120px;
+    margin-top:10px;
+    border:2px solid #333;
+    background:#000;
+}
+
+.piece{
+    width:105px;
+    height:105px;
+    position:absolute;
+    cursor:grab;
+    user-select:none;
+    border:1px solid rgba(0,0,0,0.2);
+}
+
+.piece img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    pointer-events:none;
+}
+
+.winner{
+    font-size:14px;
+    color:green;
+    margin-top:5px;
+    height:18px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="container"></div>
+
+<script>
+const PIECE_IMAGES = [
+    "630295938_1243711267125065_6655759929417233564_n.png",
+    "download.jpg",
+    "IMG_20251001_093540_599.jpg",
+    "638127149_925960393183644_8328507454410434458_n.jpg",
+    "img/piece4.jpg",
+    "img/piece5.jpg",
+    "img/piece6.jpg",
+    "img/piece7.jpg",
+    "img/piece8.jpg",
+    "img/piece9.jpg",
+    "img/piece10.jpg",
+    "img/piece11.jpg",
+    "img/piece12.jpg",
+    "img/piece13.jpg",
+    "img/piece14.jpg",
+    "img/piece15.jpg"
+];
+
+const container = document.getElementById("container");
+
+function createGame(){
+
+    const game = document.createElement("div");
+    game.className = "game";
+
+    const board = document.createElement("div");
+    board.className = "board";
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 120;
+    canvas.height = 120;
+    canvas.className = "preview";
+
+    const win = document.createElement("div");
+    win.className = "winner";
+
+    game.appendChild(board);
+    game.appendChild(canvas);
+    game.appendChild(win);
+    container.appendChild(game);
+
+    const ctx = canvas.getContext("2d");
+
+    const SIZE = 420;
+    const CELL = SIZE / 4;
+
+    let dragged = null;
+    let offsetX = 0;
+    let offsetY = 0;
+    let correct = 0;
+
+    let snapState = new Array(16).fill(null);
+
+    function spawn(){
+        for(let i=0;i<16;i++){
+
+            const piece = document.createElement("div");
+            piece.className = "piece";
+            piece.dataset.index = i;
+
+            const img = document.createElement("img");
+            img.src = PIECE_IMAGES[i];
+            piece.appendChild(img);
+
+            piece.style.left = Math.random()*200 + "px";
+            piece.style.top = Math.random()*200 + "px";
+
+            piece.onmousedown = (e)=>{
+                dragged = piece;
+                const rect = piece.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                piece.style.zIndex = 999;
+            };
+
+            board.appendChild(piece);
+        }
+    }
+
+    document.addEventListener("mousemove", e=>{
+        if(!dragged) return;
+        dragged.style.left = (e.clientX - offsetX) + "px";
+        dragged.style.top = (e.clientY - offsetY) + "px";
+    });
+
+    document.addEventListener("mouseup", e=>{
+        if(!dragged) return;
+
+        const rect = board.getBoundingClientRect();
+
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        if(x>=0 && x<=SIZE && y>=0 && y<=SIZE){
+
+            const col = Math.floor(x / CELL);
+            const row = Math.floor(y / CELL);
+            const index = row*4 + col;
+
+            for(let i=0;i<16;i++){
+                if(snapState[i] === dragged) snapState[i] = null;
+            }
+
+            snapState[index] = dragged;
+
+            dragged.style.left = col*CELL + "px";
+            dragged.style.top = row*CELL + "px";
+
+            if(parseInt(dragged.dataset.index) === index){
+                if(!dragged.dataset.locked){
+                    correct++;
+                    dragged.dataset.locked = true;
+                    dragged.style.border = "2px solid lime";
+                }
+            }
+        }
+
+        dragged = null;
+
+        if(correct === 16){
+            win.textContent = "COMPLETED!";
+        }
+    });
+
+    function updatePreview(){
+        ctx.clearRect(0,0,120,120);
+
+        for(let i=0;i<16;i++){
+            const p = snapState[i];
+            if(!p) continue;
+
+            const img = new Image();
+            img.src = PIECE_IMAGES[p.dataset.index];
+
+            const col = i%4;
+            const row = Math.floor(i/4);
+
+            img.onload = ()=>{
+                ctx.drawImage(img,col*30,row*30,30,30);
+            };
+        }
+    }
+
+    setInterval(updatePreview, 200);
+
+    spawn();
+}
+
+for(let i=0;i<4;i++){
+    createGame();
+}
+</script>
+
+</body>
+</html>

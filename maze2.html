@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Editor Mode</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    background:black;
+    font-family:Arial;
+}
+
+#screen{
+    width:2600px;
+    height:2400px;
+    position:absolute;
+    background:#111;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:50px 50px;
+    margin: 100px;
+}
+
+#player{
+    width:50px;
+    height:50px;
+    background:lime;
+    position:absolute;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+
+.wall{
+    position:absolute;
+    border:2px solid rgba(255,255,255,0.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* 🔥 EDITOR NUMBER SYSTEM (IMPORTANT PART) */
+.wall span{
+    font-size:66px;
+    font-weight:900;
+    color:#ad00cf;
+
+    background:rgba(0,0,0,0.85);
+    padding:4px 8px;
+    border-radius:6px;
+
+
+    text-shadow:
+        0 0 6px #ad00cf,
+        0 0 12px #ad00cf;
+
+    pointer-events:none;
+
+    transition:all 0.2s ease;
+}
+
+/* EVEN BIGGER IN MAP MODE */
+.wall.mapMode span{
+    font-size:38px;
+    color:#ad00cf;
+
+    background:rgba(0,0,0,0.95);
+
+    border:3px solid #ad00cf;
+
+    text-shadow:
+        0 0 10px #ad00cf,
+        0 0 20px #ad00cf,
+        0 0 30px #ad00cf;
+}
+
+#goal{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:red;
+    position:absolute;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:bold;
+}
+
+#ui{
+    position:fixed;
+    top:10px;
+    left:10px;
+    background:rgba(0,0,0,0.7);
+    padding:12px;
+    color:white;
+    border:1px solid lime;
+    width:240px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="screen">
+    <div id="goal">EXIT</div>
+    <div id="player">ME</div>
+</div>
+
+<script>
+
+let screen = document.getElementById("screen")
+let player = document.getElementById("player")
+let goal = document.getElementById("goal")
+
+let x = 100
+let y = 100
+
+let keys = {}
+let noclip = false
+let mapView = true
+
+let walls = []
+
+document.addEventListener("keydown",(e)=>{
+    keys[e.key] = true
+
+    if(e.key.toLowerCase() === "m"){
+        mapView = !mapView
+
+        walls.forEach(w=>{
+            if(mapView){
+                w.el.classList.add("mapMode")
+            }else{
+                w.el.classList.remove("mapMode")
+            }
+        })
+    }
+
+    if(e.key.toLowerCase() === "h"){
+        noclip = !noclip
+    }
+})
+
+document.addEventListener("keyup",(e)=>{
+    keys[e.key] = false
+})
+
+/* =========================
+   WALL SYSTEM (BIG NUMBERS)
+========================= */
+
+function add(x,y,w,h,color,id){
+
+    let div = document.createElement("div")
+    div.className = "wall"
+
+    div.style.left = x + "px"
+    div.style.top = y + "px"
+    div.style.width = w + "px"
+    div.style.height = h + "px"
+    div.style.background = color
+
+    let label = document.createElement("span")
+    label.innerText = id
+
+    div.appendChild(label)
+
+    screen.appendChild(div)
+
+    walls.push({
+        x,y,w,h,
+        el:div
+    })
+}
+
+function blocked(nx,ny){
+    for(let w of walls){
+        if(
+            nx < w.x + w.w &&
+            nx + 50 > w.x &&
+            ny < w.y + w.h &&
+            ny + 50 > w.y
+        ){
+            return true
+        }
+    }
+    return false
+}
+
+/* =========================
+   MAZE SYSTEM
+========================= */
+
+let mx = 0
+let my = 0
+
+let mazeWidth = 2600
+let mazeHeight = 2400
+
+let originalWidth = 836
+let originalHeight = 836
+
+let scaleX = mazeWidth / originalWidth
+let scaleY = mazeHeight / originalHeight
+
+function maze(x,y,w,h,color,id){
+    add(
+        mx + x * scaleX,
+        my + y * scaleY,
+        w * scaleX + 1,
+        h * scaleY + 1,
+        color,
+        id
+    )
+}
+
+let s = 24
+
+/* ================= WALLS ================= */
+
+// TOP
+// X Y W H COLOR ID
+maze(1,80,90,s,"orange",1)
+maze(120,0,s,200,"orange",2)
+maze(120,240,s,60,"orange",2.5)
+maze(120,120,160,s,"orange",3)
+maze(280,55,200,s,"yellow",4)
+maze(400,55,s,190,"yellow",5)
+maze(260,180,340,s,"lime",6)
+maze(550,150,s,100,"lime",7)
+maze(550,0,s,100,"lime",7.5)
+maze(640,120,100,s,"cyan",8)
+maze(780,50,55,s,"cyan",8.5)
+maze(640,0,s,130,"cyan",9)
+maze(720,30,s,210,"cyan",9.5)
+maze(780,30,s,210,"cyan",9.75)
+
+// CENTER LEFT
+// X Y W H COLOR ID
+
+maze(30,280,220,s,"blue",10)
+maze(280,180,s,100,"blue",11)
+maze(130,280,s,120,"blue",11.5)
+maze(280,280,120,s,"purple",12)
+maze(400,280,s,150,"violet",13)
+maze(480,280,160,s,"deeppink",14)
+maze(450,350,160,s,"deeppink",14.5)
+maze(640,180,s,200,"hotpink",15)
+maze(720,280,s,120,"red",16)
+
+// CENTER
+// X Y W H COLOR ID
+maze(80,380,210,s,"orange",17)
+maze(200,440,140,s,"yellow",18)
+maze(130,500,160,s,"yellow",18.5)
+maze(150,400,s,170,"lime",19)
+maze(400,420,200,s,"cyan",20)
+maze(640,380,104,s,"blue",21)
+maze(720,280,115,s,"purple",22)
+
+// LOWER LEFT
+// X Y W H COLOR ID
+maze(80,460,s,140,"violet",23)
+maze(0,380,s,140,"violet",23.5)
+maze(80,600,264,s,"deeppink",24)
+maze(320,290,s,320,"hotpink",25)
+
+// LOWER CENTER
+// X Y W H COLOR ID
+maze(400,500,s,220,"red",26)
+maze(480,560,120,s,"orange",27)
+maze(576,504,s,120,"yellow",28)
+maze(576,420,s,50,"yellow",28.5)
+maze(640,440,s,50,"yellow",28.75)
+maze(720,450,115,s,"lime",29)
+maze(600,520,145,s,"lime",29.5)
+maze(720,620,80,s,"lime",29.75)
+
+// BOTTOM
+// X Y W H COLOR ID
+maze(0,660,160,s,"cyan",30)
+maze(0,740,160,s,"cyan",30.5)
+maze(220,560,s,160,"blue",31)
+maze(280,700,144,s,"purple",32)
+maze(320,550,100,s,"purple",32.5)
+maze(400,650,100,s,"purple",32.75)
+maze(400,700,s,110,"violet",33)
+maze(480,700,s,110,"violet",33.5)
+maze(520,726,200,s,"deeppink",34)
+maze(560,650,80,s,"deeppink",34.5)
+maze(780,460,s,220,"hotpink",35)
+maze(660,550,s,200,"hotpink",35.5)
+
+// BOTTOM LEFT
+// X Y W H COLOR ID
+maze(80,740,s,70,"red",36)
+maze(160,810,120,s,"orange",37)
+maze(280,700,s,135,"yellow",38)
+
+// BOTTOM RIGHT
+// X Y W H COLOR ID
+
+maze(400,787,120,s,"lime",39)
+maze(520,651,s,160,"cyan",40)
+maze(580,660,s,114,"cyan",40.5)
+maze(580,805,s,30,"cyan",40.75)
+maze(640,750,160,s,"blue",41)
+maze(635,810,200,s,"blue",41.5)
+
+goal.style.left = "1070px"
+goal.style.top = "2130px"
+
+/* =========================
+   MOVEMENT
+========================= */
+
+function move(){
+
+    let speed = keys["Shift"] ? 20 : 8
+
+    let nx = x
+    let ny = y
+
+    if(keys["w"]||keys["ArrowUp"]) ny -= speed
+    if(keys["s"]||keys["ArrowDown"]) ny += speed
+    if(keys["a"]||keys["ArrowLeft"]) nx -= speed
+    if(keys["d"]||keys["ArrowRight"]) nx += speed
+
+    if(noclip){
+        x = nx
+        y = ny
+    }else if(!blocked(nx,ny)){
+        x = nx
+        y = ny
+    }
+
+    player.style.left = x + "px"
+    player.style.top = y + "px"
+
+    if(mapView){
+        screen.style.transform = "scale(0.35)"
+        screen.style.transformOrigin = "0 0"
+        screen.style.left = "0px"
+        screen.style.top = "0px"
+    }else{
+        screen.style.transform = "scale(1)"
+        screen.style.left = (window.innerWidth/2 - x - 25) + "px"
+        screen.style.top = (window.innerHeight/2 - y - 25) + "px"
+    }
+
+    requestAnimationFrame(move)
+}
+
+move()
+
+</script>
+
+</body>
+</html>
